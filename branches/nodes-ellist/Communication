@@ -1,0 +1,63 @@
+# $Id$
+# This file is for internal communication between developers.
+# It will not be included in releases (as opposed to README/History)
+###########################################################################
+2004-10-08 BV: Bart, Ik heb deze file gemaakt als een extra communicatiemiddel
+(naast bv. E-mail), omdat op deze manier onze bedenkingen en besprekingen over
+het projekt gemakkelijk kunnen samen gehouden worden. 
+###########################################################################
+2004-10-08 BV: Het volgende heb ik naar hier overgebracht uit de README file
+
+But this is a list of things we want to do before we go public:
+
+- introduce all (or most) of the formian functions
+- provide basic documentation
+- make a clean GUI
+- provide output facilities (text and graphics)
+- make a formian to pyformex translator
+
+And these ideas might be useful:
+- on installation, create a remove script
+- create a batch run mode
+###########################################################################
+2004-10-08 BV: Properties kunnen gezet worden. Ofwel bij creatie:
+  F = Formex({...},props=...)
+ofwel achteraf : F.setProps(...)
+props kan een enkel getal zijn (dan krijgen alle elementen die prop),
+of een lijst/array/.. : als je bv [1,1,3] toekent aan een formex met 7 
+elementen, krijgen die de properties  1,1,3,1,1,3,1 
+Properties kunnen al afgedrukt worden (zie test), maar worden nog niet
+gekopieerd.
+###########################################################################
+2004-10-08 BV: Mijn plannen:
+   - kopieren van properties toevoegen.
+   - property gebruiken voor het tekenen in verschillende kleuren
+###########################################################################
+2004-10-09 BV: Dit is allemaal vlotter verlopen dan ik gedacht had.
+Properties worden nu overal meegekopieerd.
+En ze kunnen zichtbaar gemaakt worden via de drawProp funktie.
+(Zie het voorbeeld ColorDoubleLayer
+###########################################################################
+2004-10-13 BV: De functies unique en nodes geimplementeerd. nodes geeft
+gewoon de volledige formex terug, maar als losse knopen. NOrmaal zal men
+F.nodes().unique() gebruiken om unieke knopenset te bekomen. Een formex met
+enkel knopen kan nu ook getekend worden (zie voorbeeld hyparcap).
+###########################################################################
+2004-10-15 BV: Tot nu toe gebruikte ik mijn standaard editor (XEmacs) om
+voorbeelden te maken en uit te proberen. Maar misschien moet wij een editor
+inbouwen in pyformex.
+Ik wil ook werk maken van de sorteer funktie, het verwijderen van elementen,
+en het omzetten van een formex naar een knooppnummerlijst.
+Tenslotte zijn er nog een aantal belangrijke formian funkties niet 
+geimplementeerd. Hier zou jij me kunnen helpen, Bart. Vooral de funkties
+die nodig zijn om enkele mooie voorbeelden uit je afstudeerwerk te kunnen
+reproduceren. O.a. glisit, sbd, bapel, nnov,...
+Als dat er allemaal is, kunnen we, denk ik, het projekt naar buiten brengen.
+############################################################################
+2004-10-25 BV: Ik probeer zoveel mogelijk de from ...import * te vermijden,
+voornamelijk omdat dan bij de generatie van documentatie met pydoc ook alle
+imports weergegeven worden, wat zeer lang duurt en tot veel te omvangrijke 
+docs leidt.
+Ik ben ook aan het experimenteren met de smooth rendering voor vlakken.
+Ik probeer de wireframe display niet te beschadigen.
+############################################################################
