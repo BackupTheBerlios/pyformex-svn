@@ -1,10 +1,18 @@
 # README
+##
+## This file is part of pyformex 0.1 Release Wed Jul  7 12:20:13 2004
+## pyformex is a python implementation of Formex algebra
+## (c) 2004 Benedict Verhegghe (email: benedict.verhegghe@ugent.be)
+## Distributed under the General Public License, see file COPYING for details
+##
 #
-# Calpy is a Finite Element program intended for stress and displacement
-# calculations in mechanics of materials and structures
+# pyformex is a program that lets you easily generate large sets of coordinates
+# following simple generation patterns such as translation, rotation,
+# reflection, mathematical functions, replication.
+# It may be useful to generate node and elements sets in finite element mesh
+# generation and in the design of spatial frame structures.
 #
-# It is primarily intended as an educational tool for use in our lectures.
-# But if you find it useful for something else, please go ahead and use it.
+# But if you find it useful for something else, please go ahead.
 # If you have questions or remarks, feel free to contact the author.
 #
 # BEWARE: this is very early beta beta software, undergoing frequent changes!
@@ -21,9 +29,9 @@ Howto remove:
 What you need:
 --------------
 python: www.python.org
-  I recommend version 2.2 or higher
+  We recommend version 2.2 or higher
 numarray: http://www.stsci.edu/resources/software_hardware/numarray
-  I recommend version 0.8 or higher
+  We recommend version 0.8 or higher
 <TODO>
 
 
@@ -50,3 +58,32 @@ But this is a list of things we have to do before we go public:
 
 And these ideas might be useful:
 - on installation, create a remove script
+
+
+
+
+
+Documentation:
+-------------
+Because it is not obvious from the GUI:
+
+The canvas showing the Formex has dynamic zoom/pan/rotate functionality.
+Moving the mouse with one of the buttons depressed will activate this:
+  LEFT mouse button : rotate
+  MIDDLE mouse button : pan
+  RIGHT mouse button : zoom : horizontal movement zooms by camera lens angle,
+        vertical movement zooms by changing camera distance. The first mode 
+	keeps the perspecive, the second one changes it.
+	Moving right and up zooms in, left and down zooms out. Moving 
+	diagonally from upper left to lower right more or less keeps the
+	image size, while changing the perspective.
+
+
+
+Help:
+----
+
+Address all your questions, observations and ideas to
+benedict.verhegghe@ugent.be
+
+

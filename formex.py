@@ -1,8 +1,31 @@
 #!/usr/bin/env python
+##
+## This file is part of pyformex 0.1 Release Wed Jul  7 12:20:13 2004
+## pyformex is a python implementation of Formex algebra
+## (c) 2004 Benedict Verhegghe (email: benedict.verhegghe@ugent.be)
+## Distributed under the General Public License, see file COPYING for details
+##
 """Formex algebra in python"""
 
 from numarray import *
 import math
+
+# Convenience functions: trigonometric functions with argument in degrees
+# Should we keep this in ???
+# or shall we redefine them as in
+#   def sin(arg): return math.sin(math.radians(arg))
+
+def sind(arg):
+    """Return the sin of an angle in degrees."""
+    return sin(radians(arg))
+
+def cosd(arg):
+    """Return the sin of an angle in degrees."""
+    return cos(radians(arg))
+
+def tand(arg):
+    """Return the sin of an angle in degrees."""
+    return tan(radians(arg))
 
 # Update 02 Jul 2004
 # For simplicity's sake, we work now only with 3-D coordinates.
@@ -66,37 +89,51 @@ class Formex:
 
     def signet2str(self,sig):
         s = ""
-        if len(sig):
-            s +=  str(sig[0])
-            for i in sig[1:]:
-                s += ","
-                s += str(i)
+        if len(sig)>0:
+            s += str(sig[0])
+            if len(sig) > 1:
+                for i in sig[1:]:
+                    s += "," + str(i)
         return s
 
     def cantle2str(self,can):
         s = "["
-        if len(can):
+        if len(can) > 0:
             s += self.signet2str(can[0])
-            for i in can[1:]:
-                s += ";"
-                s += self.signet2str(i)
+            if len(can) > 1:
+                for i in can[1:]:
+                    s += "; " + self.signet2str(i) 
         return s+"]"
     
     def asFormex(self):
         """String representation of a formex as in Formian"""
         s = "{"
-        if len(self.f):
+        if len(self.f) > 0:
             s += self.cantle2str(self.f[0])
-            for i in self.f:
-                s += ","
-                s += self.cantle2str(i)
+            if len(self.f) > 1:
+                for i in self.f[1:]:
+                    s += ", " + self.cantle2str(i)
         return s+"}"
                 
     def asArray(self):
         return self.f.__str__()
 
+    #default print function
     __str__ = asFormex
 
+    def setPrintFunction (clas,func):
+        """Choose the default formatting for printing formices.
+
+        This sets how formices will be formatted by a print statement.
+        Currently there are two available functions: asFormex, asArray.
+        The user may create its own formatting method.
+        This is a class function. It should be used asfollows:
+        Formex.setPrintFunction(Formex.asArray).
+        """
+        clas.__str__ = func
+        
+    setPrintFunction = classmethod(setPrintFunction)
+        
     def copy(self):
         """Returns a deep copy of itself"""
         return Formex(self.f)
@@ -161,15 +198,6 @@ class Formex:
             f[k,k] = c
         return f
 
-    def translate1(self,dir,distance):
-        """Returns a copy translated in direction dir over distance dist.
-
-        The direction is specified by the axis number (0,1,2).
-        """
-        f = self.f.copy()
-        f[:,:,dir] += distance
-        return Formex(f)
-
     def translate(self,vector,distance=None):
         """Returns a copy translated over translation vector.
 
@@ -180,6 +208,31 @@ class Formex:
             return Formex(self.f + scale(unitvector(vector),distance))
         else:
             return Formex(self.f + vector)
+
+    # This could be replaced by a call to translate(), but it is cheaper
+    # because we operate on one third of the coordinates only
+    def translate1(self,dir,distance):
+        """Returns a copy translated in direction dir over distance dist.
+
+        The direction is specified by the axis number (0,1,2).
+        """
+        f = self.f.copy()
+        f[:,:,dir] += distance
+        return Formex(f)
+
+    def translatem(self,*args):
+        """Multiple subsequent translations in axis directions.
+
+        The argument list is a sequence of tuples (axis number, step). 
+        Thus translatem((0,x),(2,z),(1,y)) is equivalent to
+        translate([x,y,z]). This function is especially conveniant
+        to translate in calculated directions.
+        """
+        tr = [0.,0.,0.]
+        for d,t in args:
+            tr[d] += t
+        return self.translate(tr)
+        
 
     def rotate(self,angle,axis=2):
         """Returns a copy rotated over distance dist of matching grade."""
@@ -223,7 +276,47 @@ class Formex:
             f[i] = matrixmultiply(f[i],m)
         f.shape = (f.shape[0]*f.shape[1],f.shape[2],f.shape[3])
         return Formex(f + point)
-        
+    
+    def generate2(self,n1,n2,d1,d2,t1,t2,bias=0,taper=0):
+        """Generate copies in two directions.
+
+        n1,n2 number of replications in direction d1,d2
+        t1,t2 step in these directions
+        bias, taper : extra step and extra number of generations in direction
+        d1 for each generation in direction d2
+        """
+        P = [ self.translatem((d1,i*bias),(d2,i*t2)).rindle(n1+i*taper,d1,t1)
+              for i in range(n2) ]
+        return self.concatenate(P)
+
+    def cylindrical(self,b1,b2,b3):
+        """Converts from cylindrical to cartesian after scaling"""
+        f = copy.deepcopy(self.f)
+        r = b1*f[:,:,0]
+        theta = math.radians(b2)*f[:,:,1]
+        f[:,:,0] = r*cos(theta)
+        f[:,:,1] = r*sin(theta)
+        f[:,:,2] *= b3
+        return Formex(f)
+    
+    def spherical(self,b1,b2,b3):
+        """Converts from spherical to cartesian after scaling"""
+        f = copy.deepcopy(self.f)
+        r = b1*f[:,:,0]
+        s = math.radians(b2)*f[:,:,1]
+        t = math.radians(b3)*f[:,:,2]
+        print r,s,t
+        rc = r*sin(t)
+        print rc
+        f[:,:,0] = rc*cos(s)
+        f[:,:,1] = rc*sin(s)
+        f[:,:,2] = r*cos(t)
+        return Formex(f)
+      
+    def unique(self):
+        """Return a formex which holds only the unique cantles."""
+        # NOT IMPLEMENTED YET !!! FOR NOW, RETURNS A COPY
+        return Formex(self.f)
 
  
     # Compatibility functions # deprecated !
@@ -244,15 +337,17 @@ class Formex:
         return self.reflectAdd(dir-1,dist)
 
     def ros(self,i,j,x,y,n,angle):
-        if self.grade() == 2:
-            return self.rosette(n,2,[x,y],angle)
-        elif (i,j) == (1,2):
+        if (i,j) == (1,2):
             return self.rosette(n,2,[x,y,0],angle)
         elif (i,j) == (2,3):
             return self.rosette(n,0,[0,x,y],angle)
         elif (i,j) == (1,3):
             return self.rosette(n,1,[x,0,y],-angle)
 
+    def tranic(self,*args):
+        n = len(args)/2
+        d = [ i-1 for i in args[:n] ]
+        return self.translatem(*zip(d,args[n:]))
     def tranid(self,t1,t2):
         return self.translate([t1,t2,0])
     def tranis(self,t1,t2):
@@ -284,33 +379,39 @@ class Formex:
         return self.lam(1,t1).lam(3,t2)
     def lamit(self,t1,t2):
         return self.lam(2,t1).lam(2,t2)
+    
+    def rosad(self,a,b,n,angle):
+        return self.rosette(n,2,[a,b,0],angle)
+    def rosas(self,a,b,n,angle):
+        return self.rosette(n,1,[a,0,b],angle)
+    def rosat(self,a,b,n,angle):
+        return self.rosette(n,0,[0,a,b],angle)
 
-    def genid(self,n1,n2,t1,t2,bias,taper):
+    def genid_old(self,n1,n2,t1,t2,bias,taper):
         P = [ self.translate([i*bias,i*t2,0]).rin(1,n1+i*taper,t1)
               for i in range(n2) ]
         return self.concatenate(P)
 
+    def genid(self,n1,n2,t1,t2,bias=0,taper=0):
+        return self.generate2(n1,n2,0,1,t1,t2,bias,taper)
+    def genis(self,n1,n2,t1,t2,bias=0,taper=0):
+        return self.generate2(n1,n2,0,2,t1,t2,bias,taper)
+    def genit(self,n1,n2,t1,t2,bias=0,taper=0):
+        return self.generate2(n1,n2,1,2,t1,t2,bias,taper)
+
     def bb(self,b1,b2):
         return self.scale([b1,b2,1.])
 
-    def bp(self,b1,b2):
-        f = copy.deepcopy(self.f)
-        a = b1*f[:,:,0]
-        b = math.radians(b2)*f[:,:,1]
-        f[:,:,0] = a*cos(b)
-        f[:,:,1] = a*sin(b)
-        return Formex(f)
+    def bc(self,b1,b2,b3):
+        return self.cylindrical(b1,b2,b3)
 
-    def bs(self,b1,b2):
-        f = copy.deepcopy(self.f)
-        r = b1*f[:,:,0]
-        s = math.radians(b2)*f[:,:,1]
-        t = math.radians(b3)*f[:,:,2]
-        rc = r*cos(t)
-        f[:,:,0] = rc*cos(s)
-        f[:,:,1] = rc*sin(s)
-        f[:,:,2] = r*sin(t)
-        return Formex(f)
+    def bp(self,b1,b2):
+        return self.cylindrical(b1,b2,1.)
+
+    def bs(self,b1,b2,b3):
+        return self.spherical(b1,b2,b3)
+
+    pex = unique
     
 
 
@@ -319,21 +420,26 @@ if __name__ == "__main__":
     
     def test():
         print "This is a test of formex algebra"
-        F = Formex([[[1,0],[0,1]],[[0,1],[1,2]]])
-        print "F =",F
-        F1 = F.tran(1,6)
-        print "F1 =",F1
-        F2 = F.ref(1,2)
-        print "F2 =",F2
-        F3 = F.ref(1,1.5).tran(2,2)
-        print "F3 =",F3
-        H = F.rin(1,4,2)
-        print "H =",H
-        R = F.lam(1,1)
-        print "R =",R
-        G = F.lam(1,1).lam(2,1).rin(1,10,2).rin(2,6,2)
-        print "G =",G
-        
+##        F = Formex([[[1,0],[0,1]],[[0,1],[1,2]]])
+##        print "F =",F
+##        F1 = F.tran(1,6)
+##        print "F1 =",F1
+##        F2 = F.ref(1,2)
+##        print "F2 =",F2
+##        F3 = F.ref(1,1.5).tran(2,2)
+##        print "F3 =",F3
+##        H = F.rin(1,4,2)
+##        print "H =",H
+##        R = F.lam(1,1)
+##        print "R =",R
+##        G = F.lam(1,1).lam(2,1).rin(1,10,2).rin(2,6,2)
+##        print "G =",G
+        F = Formex([[[1,0,0],[0,1,1]]])
+        print F
+        G = F.translatem((1,4),(2,10))
+        print G
+        H = F.tranic(2,3,4,10)
+        print H
     test()
 
 #### End

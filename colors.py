@@ -1,4 +1,4 @@
-"""Some named colors"""
+# Definition of some RGB colors
 
 black   = (0.0,0.0,0.0)
 red     = (1.0,0.0,0.0)

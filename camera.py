@@ -1,5 +1,11 @@
 #!/usr/bin/env python
-"""Camera 0.1 (C) Benedict Verhegghe
+##
+## This file is part of pyformex 0.1 Release Wed Jul  7 12:20:13 2004
+## pyformex is a python implementation of Formex algebra
+## (c) 2004 Benedict Verhegghe (email: benedict.verhegghe@ugent.be)
+## Distributed under the General Public License, see file COPYING for details
+##
+"""camera 0.1 (C) Benedict Verhegghe
 
 This class defines a camera for OpenGL rendering. It lets you manipulate
 the camera position and viewing direction as well as the lens parameters.
@@ -51,7 +57,10 @@ class Camera:
         self.setClip(0.1,10.)
         self.setPerspective(True)
 
+
     # Camera position and viewing direction
+    # !! These functions do not automatically reload the transformation matrix
+    # !! Clients should explicitely call loadMatrix() before displaying
 
     def setCenter(self,x,y,z):
         """Set thecenter of the camera in cartesian coordinates."""
@@ -60,12 +69,19 @@ class Camera:
     def setPos(self,x,y,z):
         self.pos = [x % 360,y % 360,z]
 
+    def setDistance(self,d):
+        self.pos[2] = d
+
     def setTwist(self,t):
         self.twist = t % 360
         
     def getEye(self):
         """Return the cartesian coordinates of the camera (eye)."""
         return add(self.ctr,sphericalToCartesian(self.pos))
+        
+    def distance(self):
+        """Return the camera distance from the center."""
+        return self.pos[2]
         
     def getAngles(self):
         """Return the three rotation angles of the camera."""
@@ -82,19 +98,6 @@ class Camera:
         dist is the distance from the center.
         """
         self.eye = [lat,long,dist]
-
-    def loadMatrix(self):
-        """Load the camera transformation matrix"""
-        print "Center = ",self.ctr
-        print "Position = ",self.pos
-        print "Eye = ",self.getEye()
-        print "Angles = ",self.getAngles()
-        rot = self.getAngles()
-        eye = self.getEye()
-        glRotatef(-rot[2], 0.0, 0.0, 1.0)
-        glRotatef(-rot[0], 1.0, 0.0, 0.0)
-        glRotatef(-rot[1], 0.0, 1.0, 0.0)
-        glTranslatef(-eye[0],-eye[1],-eye[2])
 
     def dolly(self,val):
         """Move the camera eye towards/away from the scene center.
@@ -172,16 +175,26 @@ class Camera:
         eye = self.getEye()
         ang = self.getAngles()
         tr = [translation]
-        print "orig:",tr
         for i in [1,0,2]:
             r = rotationMatrix(i,ang[i])
-            print r
             tr = matrixMultiply(tr, r)
-            print "na trf ",i,tr
         self.move(tr[0])
         
 
-    # Camera viewing parameters
+    # Camera Lens Setting.
+    #
+    # These include :
+    #   - the vertical lens opening angle (fovy),
+    #   - the aspect ratio (aspect = width/height)
+    #   - the front and back clipping planes (near,far)
+    #
+    # These functions do not auto-reload the projection matrix, so you
+    # do not need to make the GL-environment current before using them.
+    # The client has to explicitely call the loadProjection() method to
+    # make the settings acive 
+    # These functions will flag a change in the camera settings, which
+    # can be tested by your display() function to know if it has to reload
+    # the projection matrix.
 
     def setLens(self,fovy=None,aspect=None):
         """Set the field of view of the camera.
@@ -190,36 +203,31 @@ class Camera:
         and the aspect ratio (width/height) of the viewing volume.
         A parameter that is not specified is left unchanged.
         """
-        if fovy: self.fovy = fovy
-        if aspect: self.aspect = aspect
+        if fovy: self.fovy = min(abs(fovy),180)
+        if aspect: self.aspect = abs(aspect)
+        self.lensChanged = True
         
     def setClip(self,near,far):
         """Set the near and far clipping planes"""
         if near > 0 and near < far:
             self.near,self.far = near,far
+            self.lensChanged = True
         else:
             print "Error: Invalid Near/Far clipping values""" 
+        self.lensChanged = True
         
     def setClipRel(self,near,far):
         """Set the near and far clipping planes"""
         if near > 0 and near < far:
             self.near,self.far = near,far
+            self.lensChanged = True
         else:
             print "Error: Invalid Near/Far clipping values""" 
 
     def setPerspective(self,on=True):
         """Set perspective on or off"""
         self.perspective = on
-
-    def loadProjection(self):
-        """Load the projection/perspective matrix."""
-	glMatrixMode(GL_PROJECTION)
-	glLoadIdentity()
-        if self.perspective:
-            gluPerspective(self.fovy,self.aspect,self.near,self.far)
-        else:
-            glOrtho(self.left,self.right,self.top,self.bottom,self.near,self.far)
-	glMatrixMode(GL_MODELVIEW)     
+        self.lensChanged = True
 
     def zoom(self,val=0.5):
         """Zoom in/out by shrinking/enlarging the camera view angle.
@@ -230,8 +238,58 @@ class Camera:
         if val>0:
             self.fovy *= val
         #self.setClip(dist,2*dist+size[2])
-        print "Lens = ",self.fovy,self.aspect
-        self.loadProjection()
+        #print "Lens = ",self.fovy,self.aspect
+        self.lensChanged = True
+
+
+    # Finally the activation of the camera settings
+    #
+    # You should make the GL environment current before calling
+    # these. Typically your OpenGL widget will have a display() function
+    # like this:
+    #     self.makeCurrent()
+    #     camera.loadProjection()
+    #     camera.loadMatrix()
+    
+
+    def loadMatrix(self):
+        """Load the camera transformation matrix.
+
+        The caller will have to setup the correct GL environment beforehand.
+        He also should make sure that matrix mode is GL_MODELVIEW. Since
+        this is usually the default, we do not set it here.
+        """
+        #print "Center = ",self.ctr
+        #print "Position = ",self.pos
+        #print "Eye = ",self.getEye()
+        #print "Angles = ",self.getAngles()
+        rot = self.getAngles()
+        eye = self.getEye()
+        glRotatef(-rot[2], 0.0, 0.0, 1.0)
+        glRotatef(-rot[0], 1.0, 0.0, 0.0)
+        glRotatef(-rot[1], 0.0, 1.0, 0.0)
+        glTranslatef(-eye[0],-eye[1],-eye[2])
+
+    def loadProjection(self,force=False):
+        """Load the projection/perspective matrix.
+
+        The caller will have to setup the correct GL environment beforehand.
+        No need to set matrix mode though. This function will switch to
+        GL_PROJECTION mode before loading the matrix, and go back to
+        GL_MODELVIEW mode on exit.
+
+        This function does it best at autodetecting changes in the lens
+        settings, and will only reload the matrix if such changes are
+        detected. You can optionally force loading the matrix.
+        """
+        if self.lensChanged or force:
+            glMatrixMode(GL_PROJECTION)
+            glLoadIdentity()
+            if self.perspective:
+                gluPerspective(self.fovy,self.aspect,self.near,self.far)
+            else:
+                glOrtho(self.left,self.right,self.top,self.bottom,self.near,self.far)
+            glMatrixMode(GL_MODELVIEW)     
 
 
 if __name__ == "__main__":

@@ -1,4 +1,10 @@
 # A python class for 3D vector operations
+##
+## This file is part of pyformex 0.1 Release Wed Jul  7 12:20:13 2004
+## pyformex is a python implementation of Formex algebra
+## (c) 2004 Benedict Verhegghe (email: benedict.verhegghe@ugent.be)
+## Distributed under the General Public License, see file COPYING for details
+##
 #
 # (c) 2004 Benedict Verhegghe
 #

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """A formian-alike python"""
 
-Version="Forming 0.1"
+Version="pyFormex 0.1"
 import sys,time
 
 from formex import *
@@ -57,8 +57,13 @@ MenuData = [
         ("Action","&Clear","clear"),
         ("Action","&Redraw","redraw"), ]),
     ("Popup","&Examples",[
-        ("Action","&Dome","example0"),
-        ("Action","&Double Layer","example1"), ]),
+        ("Action","&Dome","exampleDome"),
+        ("Action","&ScallopDome","exampleScallopDome"),
+        ("Action","&Double Layer","exampleDoubleLayer"),
+        ("Action","&Parabolic Tower","exampleParabolicTower"),
+        ("Action","&Geodetic","exampleGeodetic"),
+        ("Action","&Diamatic","exampleDiamatic"),
+        ("Action","&Hyparcap","exampleHyparcap"), ]),
     ("Popup","&View",[
         ("Action","&Front View","frontView"),
         ("Action","&Back View","frontView"),
@@ -70,6 +75,8 @@ MenuData = [
     ("Popup","&Camera",[
         ("Action","&Zoom In","zoomIn"), 
         ("Action","&Zoom Out","zoomOut"), 
+        ("Action","&Dolly In","dollyIn"), 
+        ("Action","&Dolly Out","dollyOut"), 
         ("Action","Pan &Right","panRight"), 
         ("Action","Pan &Left","panLeft"), 
         ("Action","Pan &Up","panUp"),
@@ -107,10 +114,6 @@ def clear():
 def redraw():
     global canvas
     canvas.display()
-def example0():
-    draw(example(0))
-def example1():
-    draw(example(1))
 def frontView():
     global canvas,bbox
     canvas.setView(bbox,'front')
@@ -179,18 +182,25 @@ def rotDown():
     global canvas
     canvas.camera.rotate(-5,1)
     canvas.display()   
+def dollyIn():
+    global canvas
+    canvas.camera.dolly(0.8)
+    canvas.display()   
+def dollyOut():
+    global canvas
+    canvas.camera.dolly(1.25)
+    canvas.display()   
 
 
     
-def draw(F,camera=1):
+def draw(F,camera=True,side="front"):
     """Draw a Formex on the canvas"""
     global canvas,bbox
     canvas.removeAllActors()
     canvas.addActor(FormexActor(F))
     bbox = F.bbox()
-    print "bbox = ",bbox
     if camera:
-        canvas.setView(bbox)
+        canvas.setView(bbox,side)
     canvas.display()
 
 
@@ -250,30 +260,114 @@ def maketest(nr=0):
     elif nr == 3:
         out = G.bp(0.75,15)
     elif nr == 4:
-        out = Formex([[[5,1,1],[5,2,1]]]).rinit(6,5,1,1) + Formex([[[5,1,1],[5,1,2]]]).rinit(7,4,1,1)
+        E = Formex([[[5,1,1],[5,2,1]]]).rinit(6,5,1,1) + Formex([[[5,1,1],[5,1,2]]]).rinit(7,4,1,1)
+        print E
+        G = E.bs(1,30,5)
+        out=G
     return out
 
-def example(nr):
-    """A set of examples"""
+def exampleDome():
     global out
-    if nr == 0:
-        # Dome 1
-        ny=12; nz=8; rd=100; a=2; t=50;
-        e = Formex([[[1,0,a],[1,1,1+a]]])
-        f1 = e.rosat(1,1+a).rinit(ny,nz,2,2).bs(rd,180/ny,t/(2*nz+a))
-        f2 = Formex([[[1,0,a],[1,2,a]]]).rinit(ny,2,2,2*nz).bs(rd,180/ny,t/(2*nz+a))
-        out = f1 + f2
-        #; use&,vt(1),vm(2),vh(10,10,20,0,0,0,0,0,1); draw f;
-    elif nr == 1: # Double Layer
-        n=10; a=2./3.; d=1./n;
-        e1 = Formex([[[0,0,d],[2,0,d]],[[2,0,d],[1,1,d]],[[1,1,d],[0,0,d]]])
-        e2 = Formex([[[0,0,d],[1,1-a,0]],[[2,0,d],[1,1-a,0]],[[1,1,d],[1,1-a,0]]])
-        e4 = e1.genid(n,n,2,1,1,-1).bb(1./(2*n),1./(2*n)/tan(radians(30)))
-        e5 = e1.genid(n-1,n-1,2,1,1,-1).translate([1,1-a,-d]).bb(1./(2*n),1./(2*n)/tan(radians(30)))
-        e6 = e2.genid(n,n,2,1,1,-1).bb(1./(2*n),1./(2*n)/tan(radians(30)))
-        out = (e4+e5+e6).tran(3,-d)
-        #use &,vm(2),vh(10,6,1000,0,0,0,0,0,1); draw e; mape=1.0;
-    return out
+    ny=12; nz=8; rd=100; a=2; t=50;
+    e = Formex([[[1,0,a],[1,1,1+a]]])
+    f1 = e.rosat(1,1+a).rinit(ny,nz,2,2).bs(rd,180/ny,t/(2*nz+a))
+    f2 = Formex([[[1,0,a],[1,2,a]]]).rinit(ny,2,2,2*nz).bs(rd,180/ny,t/(2*nz+a))
+    out = f1 + f2
+    # use&,vt(1),vm(2),vh(10,10,20,0,0,0,0,0,1); draw f;
+    draw(out)
+
+def exampleDoubleLayer():
+    global out
+    n=10; a=2./3.; d=1./n;
+    e1 = Formex([[[0,0,d],[2,0,d]],[[2,0,d],[1,1,d]],[[1,1,d],[0,0,d]]])
+    e2 = Formex([[[0,0,d],[1,1-a,0]],[[2,0,d],[1,1-a,0]],[[1,1,d],[1,1-a,0]]])
+    e4 = e1.genid(n,n,2,1,1,-1).bb(1./(2*n),1./(2*n)/tan(radians(30)))
+    e5 = e1.genid(n-1,n-1,2,1,1,-1).translate([1,1-a,-d]).bb(1./(2*n),1./(2*n)/tan(radians(30)))
+    e6 = e2.genid(n,n,2,1,1,-1).bb(1./(2*n),1./(2*n)/tan(radians(30)))
+    out = (e4+e5+e6).tran(3,-d)
+    # use &,vm(2),vh(10,6,1000,0,0,0,0,0,1); draw e; mape=1.0;
+    draw(out)
+
+def exampleParabolicTower():
+    global out
+    h = 25.   # height of tower
+    h1 = 18.  # height at neck of tower
+    r = 10.   # radius at base of tower
+    r1 = 5.   # radius at neck of tower
+    m = 10    # number of sides at the base   
+    n = 8     # number of levels
+    a = (r-r1)/h1**2; b = -2*a*h1; c = r; d = h/n
+    g = lambda i: a*(d*i)**2 + b*d*i + c
+    f = concatenate([  [[[g(i),i,i], [g(i+1),i-1,i+1]],
+                 [[g(i),i,i], [g(i+1),i+1,i+1]],
+                 [[g(i+1),i-1,i+1], [g(i+1),i+1,i+1]]] for i in range(n) ])
+    #f = concatenate([ i for i in f ])
+    print f.shape
+    F = Formex(f).rin(2,m,2)
+    T = F.bc(1,360./(2*m),d)
+    out = T
+    draw(out,side="bottom")
+    
+def exampleGeodetic():
+    global out
+    m=5; n=5; v=0.5*sqrt(3.)
+    a = Formex([[[0,0,0],[1,0,0],[0.5,v,0]]])
+    aa = Formex([[[1,0,0],[1,0,0],[0.5,v,0]]])
+    d = a.genid(m,n,1,v,0.5,-1)
+    dd = aa.genid(m-1,n-1,1,v,0.5,-1)
+    e = (d+dd).rosad(m*0.5,n*v,6,60)
+    out = e
+    draw(out)
+    
+def exampleDiamatic():
+    global out
+    rt = 36.
+    rb = 34.5
+    m = 6
+    n = 6
+    a = 36.
+    T = Formex([[[rt,0,0],[rt,0,3]],[[rt,0,0],[rt,3,3]],[[rt,0,3],[rt,3,3]]])
+    W1 = Formex([[[rb,1,2],[rt,0,0]],[[rb,1,2],[rt,0,3]],[[rb,1,2],[rt,3,6]]])
+    W2 = Formex([[[rb,2,4],[rt,3,6]],[[rb,2,4],[rt,0,3]],[[rb,2,4],[rt,3,3]]])
+    B1 = Formex([[[rb,2,4],[rb,1,2]],[[rb,2,4],[rb,1,5]],[[rb,2,4],[rt,4,5]]])
+    B2 = Formex([[[rb,1,2],[rb,-1,2]]])
+    top = T.genit(1,m,3,3,0,1)
+    web = W1.genit(1,m,3,3,0,1) + W2.genit(1,m-1,3,3,0,1)
+    bot = B1.genit(1,m-1,3,3,0,1) + B2.rin(3,m,3)
+    out = top+web+bot
+    draw(out)
+
+def exampleScallopDome():
+    global out
+    a=0; g=60; m=1; p=0;
+    f1 = Formex([[[10,0,0],[10,0,1]],[[10,0,1],[10,1,1]]]).genit(1,8,1,1,0,1) + Formex([[[10,0,1],[10,1,2]]]).genit(1,7,1,1,0,1)
+    f2 = Formex([[[10,0,1],[10,1,1]]]).genit(1,4,0,2,1,0)
+    out = f1+f2
+    draw(out)
+    
+def exampleHyparcap(): #NOT COMPLETE
+    global out
+    a = 3 # verdeelparameter
+    x = -((1-sqrt(5))/2) # gulden getal
+    s = 30. # overspanning
+    m = 5; b = 360./m # pentacap
+    k1 = 0.035 # steilte
+    hoek = (90.-b)/2
+    d = 2. # laagdikte
+    c = (x*s+k1*s*s/2*sin(radians(2*hoek)))/(k1*s*cos(radians(hoek))+k1*s*sin(radians(hoek))) # pentacapvoorwaarde
+    # compret van 1 blad
+    T = Formex([[[-a,0,d],[-a+2,0,d]],[[-a,0,d],[1-a,3,d]],[[1-a,3,d],[2-a,0,d]]])
+    B = Formex([[[1-a,-1,0],[3-a,-1,0]],[[1-a,-1,0],[2-a,2,0]],[[2-a,2,0],[3-a,-1,0]]])
+    W1 = Formex([[[2-a,2,0],[1-a,3,d]],[[2-a,2,0],[3-a,3,d]],[[2-a,2,0],[2-a,0,d]]])
+    W2 = Formex([[[1-a,-1,0],[-a,0,d]],[[1-a,-1,0],[2-a,0,d]],[[1-a,-1,0],[1-a,-3,d]]])
+    W3 = Formex([[[0,3*a,d],[0,3*(a-1)-1,0]]])
+    top = T.genid(a,a,2,3,1,-1).lam(2,0).unique()
+    bot = B.genid(a-1,a-1,2,3,1,-1).lam(2,-1).unique()
+    web = W1.genid(a-1,a-1,2,3,1,-1) + W2.genid(a,a,2,-3,1,-1) + W3
+    blad = (top+bot+web).scale([1.,1./3,1.]).tranid(0,a)
+    vlakblad = blad.scale([s*sin(radians(b/2))/a,s*cos(radians(b/2)),1.])
+    out = blad
+    draw(out)
 
     
 def runApp(args):

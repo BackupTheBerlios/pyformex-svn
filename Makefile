@@ -1,8 +1,8 @@
 # Makefile for pyformex
 ##
-## This file is part of pyformex 0.1 Release Fri Mar 12 15:34:55 2004
-## pyformex is a Finite Element program written in Python
-## (c) 1997,2003 Benedict Verhegghe (email: benedict.verhegghe@ugent.be)
+## This file is part of pyformex 0.1 Release Wed Jul  7 12:20:13 2004
+## pyformex is a python implementation of Formex algebra
+## (c) 2004 Benedict Verhegghe (email: benedict.verhegghe@ugent.be)
 ## Distributed under the General Public License, see file COPYING for details
 ##
 #
@@ -22,16 +22,16 @@ DOCDIR= $(ROOTDIR)/share/doc
 
 ############# NOTHING CONFIGURABLE BELOW THIS LINE ###################
 
-VERSION= 0.1
+VERSION= 0.1.1
 PYFORMEXDIR= pyformex-$(VERSION)
 INSTDIR= $(LIBDIR)/$(PYFORMEXDIR)
 DOCINSTDIR= $(DOCDIR)/$(PYFORMEXDIR)
-PROGRAM= pyformex.py
+PROGRAM= pyformex
 SOURCE= formex.py canvas.py camera.py colors.py vector.py
 DOCFILES= README COPYING History
 EXAMPLES= 
 STAMPABLE= README History Makefile
-NONSTAMPABLE= COPYING
+NONSTAMPABLE= COPYING 
 STAMP= ./Stamp 
 
 .PHONY: install dist distclean
@@ -68,8 +68,9 @@ dist.stamped:
 	$(STAMP) -tStamp.stamp -d$(PYFORMEXDIR)/examples $(EXAMPLES)
 	$(STAMP) -tStamp.stamp -d$(PYFORMEXDIR) $(STAMPABLE)
 	cp $(NONSTAMPABLE) $(PYFORMEXDIR)
+	cp -R screenshots  $(PYFORMEXDIR)
 	tar czf $(PYFORMEXDIR).tar.gz $(PYFORMEXDIR)
- 
+
 
 distclean:
 	rm -rf $(PYFORMEXDIR)

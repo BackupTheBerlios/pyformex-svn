@@ -99,7 +99,7 @@ def StampFile(name):
     line = fil.readline()
     if line[0:2]==mark2 and len(line):
         line = fil.readline()
-    if line[0:2]==mark2 and string.find(line,"part of calpy") >= 0:
+    if line[0:2]==mark2 and string.find(line,"This file is part of") >= 0:
         while line[0:2]==mark2:
             line = fil.readline()
     fout.write(stamp)

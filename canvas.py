@@ -1,8 +1,14 @@
-"""Taster 0.1 (C) Benedict Verhegghe
+# canvas.py
+#
+#
+# This implements an OpenGL drawing widget for painting 3D scenes.
+#
+# TODO : we want to remove the Qt dependencies as much as possible out of
+#        this class
+# TODO : we want to move the actual GL actors out of this module
 
-This is the positioning window. 
+"""This implements an OpenGL drawing widget"""
 
-"""
 from qt import *
 from qtgl import *
 
@@ -16,22 +22,72 @@ from formex import *
 from camera import *
 import vector
 
+def stuur(x,xval,yval,exp=2.5):
+    """Returns a nonlinear response on the input x.
+
+    xval and yval should be lists of 3 values: [xmin,x0,xmax], [ymin,y0,yma].
+    Together with the exponent exp, they define the response curve as function
+    of x. With an exponent > 0, the variation will be slow in the neighbourhood
+    of (x0,y0). For values x < xmin or x > xmax, the limit value ymin or ymax
+    is returned.
+    """
+    xmin,x0,xmax = xval
+    ymin,y0,ymax = yval 
+    if x < xmin:
+        return ymin
+    elif x < x0:
+        xr = float(x-x0) / (xmin-x0)
+        return y0 + (ymin-y0) * xr**exp
+    elif x < xmax:
+        xr = float(x-x0) / (xmax-x0)
+        return y0 + (ymax-y0) * xr**exp
+    else:
+        return ymax
+
+
 class FormexActor(Formex):
     """An OpenGL actor which is a Formex"""
 
     def __init__(self,F):
         Formex.__init__(self,F.formex())
         
-    def display(self):
+    def display(self,wireframe=True):
         """Draw a formex of line elements.
 
         """
-        glBegin(GL_LINES)
-        for el in self.formex():
-            if len(el)==2:
-                glVertex3f(*el[0])
-                glVertex3f(*(el[1]))
-        glEnd()
+        nnod = self.plexitude()
+        print nnod
+        if nnod == 2:
+            glBegin(GL_LINES)
+            for el in self.formex():
+                for nod in el:
+                    glVertex3f(*nod)
+            glEnd()
+        elif wireframe:
+            for el in self.formex():
+                glBegin(GL_LINE_LOOP)
+                for nod in el:
+                    glVertex3f(*nod)
+                glEnd()
+        elif nnod == 3:
+            glBegin(GL_TRIANGLES)
+            for el in self.formex():
+                for nod in el:
+                    glVertex3f(*nod)
+            glEnd()
+        elif nnod == 4:
+            glBegin(GL_QUADS)
+            for el in self.formex():
+                for nod in el:
+                    glVertex3f(*nod)
+            glEnd()
+        else:
+            for el in self.formex():
+                glBegin(GL_POLYGON)
+                for nod in el:
+                    glVertex3f(*nod)
+                glEnd()
+                                
 
 
 class Canvas(QGLWidget):
@@ -40,17 +96,16 @@ class Canvas(QGLWidget):
     def __init__(self,w=640,h=480,*args):
         self.actors = []
         self.camera = Camera() # default Camera settings are adequate
+        self.dynamic = None    # what action on mouse move
         QGLWidget.__init__(self,*args)
         self.resize(w,h)
         self.glinit()
 
     def initializeGL(self):
         """Set up the OpenGL rendering state, and define display list"""
-        print sys._getframe().f_code.co_name
         self.glinit()
         
     def repaintGL(self):
-        print sys._getframe().f_code.co_name
         self.display()
         
     def	resizeGL(self,w,h):
@@ -58,26 +113,25 @@ class Canvas(QGLWidget):
 
         This will get called automatically on creating the QGLWidget!
         """
-        print sys._getframe().f_code.co_name
         self.resize(w,h)
 
     def setGLColor(self,s):
         """Set the OpenGL color to the named color"""
-        print sys._getframe().f_code.co_name
         self.qglColor(QColor(s))
 
     def clearGLColor(self,s):
         """Clear the OpenGL widget with the named background color"""
-        print sys._getframe().f_code.co_name
         self.qglClearColor(QColor(s))
 
-    def glinit(self):
-	glClearColor(*RGBA(mediumgrey))     # Clear The Background Color
+    def glinit(self,mode="wireframe"):
+	glClearColor(*RGBA(mediumgrey))# Clear The Background Color
 	glClearDepth(1.0)	       # Enables Clearing Of The Depth Buffer
 	glDepthFunc(GL_LESS)	       # The Type Of Depth Test To Do
 	glEnable(GL_DEPTH_TEST)	       # Enables Depth Testing
-	glShadeModel(GL_FLAT)	       # Enables Smooth Color Shading
-##	glShadeModel(GL_SMOOTH)	       # Enables Smooth Color Shading
+        if mode == "wireframe":
+            glShadeModel(GL_FLAT)      # Enables Flat Color Shading
+        elif mode == "render":
+            glShadeModel(GL_SMOOTH)    # Enables Smooth Color Shading
 
 ##        #print "set up lights"
 ##	glLightfv(GL_LIGHT0, GL_AMBIENT, (0.0, 0.0, 0.0, 1.0))
@@ -150,13 +204,13 @@ class Canvas(QGLWidget):
 
     def display(self):
         self.makeCurrent()
-        if self.actors:
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-            glColor3f(*black)
-            glLoadIdentity()
-            self.camera.loadMatrix()
-            for i in self.actors:
-                glCallList(i)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glColor3f(*black)
+        self.camera.loadProjection()
+        glLoadIdentity()
+        self.camera.loadMatrix()
+        for i in self.actors:
+            glCallList(i)
         self.updateGL()
         
     def resize (self,w,h):
@@ -166,7 +220,6 @@ class Canvas(QGLWidget):
 	glViewport(0, 0, w, h)
         self.aspect = float(w)/h
         self.camera.setLens(aspect=self.aspect)
-	self.camera.loadProjection()
         self.display()
 
     def setView(self,bbox,side='front'):
@@ -203,10 +256,59 @@ class Canvas(QGLWidget):
         self.camera.setClip(0.1*dist,10*dist)
         self.camera.loadProjection()
 
-    def zoom(self,val):
-        """Zoom in/out by shrinking/enlarging the camera view angle."""
-        self.makeCurrent()
-        self.camera.zoom(val)
-        #self.camera.loadProjection()
+
+    def dyna(self,x,y):
+        """Perform dynamic zoom/pan/rotation functions"""
+        w,h = self.width(),self.height()
+        if self.dynamic == "zoom":
+            # hor movement is lens zooming
+            f = stuur(x,[0,self.statex,w],[180,self.statef,0],1.5)
+            self.camera.setLens(f)
+            self.display()
+        elif self.dynamic == "combizoom":
+            # hor movement is lens zooming
+            f = stuur(x,[0,self.statex,w],[180,self.state[1],0],1.5)
+            self.camera.setLens(f)
+            # vert movement is dolly zooming
+            d = stuur(y,[0,self.statey,h],[0.1,1,10],1.5)
+            self.camera.setDistance(d*self.state[0])
+            self.display()
+        elif self.dynamic == "rotate":
+            # hor movement sets azimuth
+            a = stuur(x,[0,self.statex,w],[-360,0,+360],1.5)
+            # vert movement sets elevation
+            e = stuur(y,[0,self.statey,h],[-180,0,+180],1.5)
+            self.camera.pos[0] = self.state[0] - a
+            self.camera.pos[1] = self.state[1] + e
+            self.display()
+        elif self.dynamic == "pan":
+            print "state = ",self.state
+            # hor movement sets azimuth
+            a = stuur(x,[0,self.statex,w],[-360,0,+360],1.5)
+            # vert movement sets elevation
+            e = stuur(y,[0,self.statey,h],[-180,0,+180],1.5)
+            self.camera.pos[0] = self.state[0] - a
+            self.camera.pos[1] = self.state[1] + e
+            self.display()
         
+
+    def mouseMoveEvent(self,e):
+        if self.dynamic:
+            self.dyna(e.x(),e.y())
+        
+    def mousePressEvent(self,e):
+        self.statex = e.x()
+        self.statey = e.y()
+        if e.button() == Qt.LeftButton:
+            self.dynamic = "rotate"
+            self.state = self.camera.pos[0:2]
+        elif e.button() == Qt.MidButton:
+            self.dynamic = "pan"
+        elif e.button() == Qt.RightButton:
+            self.dynamic = "combizoom"
+            self.state = [self.camera.distance(),self.camera.fovy]
+        
+        
+    def mouseReleaseEvent(self,e):
+        self.dynamic = None
 
