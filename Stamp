@@ -18,7 +18,7 @@ def Stamp():
              text fragment '%s', this will be replaced with the date/time.
              If you omit this option, a dull standard text will be generated.
         -o<stamp> : save the (modified) stamp to file <stamp>. This is useful
-             useful to have the same time stamp over different invocations.
+             for having the same time stamp over different invocations.
         -v : be verbose
         -h : show this help
 """

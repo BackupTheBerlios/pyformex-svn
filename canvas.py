@@ -1,4 +1,11 @@
 # canvas.py
+##
+## This file is part of pyformex 0.1.2 Release Fri Jul  9 14:48:57 2004
+## pyformex is a python implementation of Formex algebra
+## (c) 2004 Benedict Verhegghe (email: benedict.verhegghe@ugent.be)
+## Releases can be found at ftp://mecatrix.ugent.be/pub/pyformex/
+## Distributed under the General Public License, see file COPYING for details
+##
 #
 #
 # This implements an OpenGL drawing widget for painting 3D scenes.
@@ -56,7 +63,6 @@ class FormexActor(Formex):
 
         """
         nnod = self.plexitude()
-        print nnod
         if nnod == 2:
             glBegin(GL_LINES)
             for el in self.formex():
@@ -70,6 +76,7 @@ class FormexActor(Formex):
                     glVertex3f(*nod)
                 glEnd()
         elif nnod == 3:
+            print "Triangles"
             glBegin(GL_TRIANGLES)
             for el in self.formex():
                 for nod in el:
@@ -99,6 +106,7 @@ class Canvas(QGLWidget):
         self.dynamic = None    # what action on mouse move
         QGLWidget.__init__(self,*args)
         self.resize(w,h)
+        self.wireframe = True
         self.glinit()
 
     def initializeGL(self):
@@ -129,8 +137,10 @@ class Canvas(QGLWidget):
 	glDepthFunc(GL_LESS)	       # The Type Of Depth Test To Do
 	glEnable(GL_DEPTH_TEST)	       # Enables Depth Testing
         if mode == "wireframe":
+            self.wireframe = True
             glShadeModel(GL_FLAT)      # Enables Flat Color Shading
         elif mode == "render":
+            self.wireframe = False
             glShadeModel(GL_SMOOTH)    # Enables Smooth Color Shading
 
 ##        #print "set up lights"
@@ -173,7 +183,7 @@ class Canvas(QGLWidget):
         self.makeCurrent()
         list = glGenLists(1)
         glNewList(list,GL_COMPILE)
-        actor.display()
+        actor.display(self.wireframe)
         glEndList ()
         self.actors.append(list)
         actor.list = list
@@ -196,7 +206,6 @@ class Canvas(QGLWidget):
         self.addActor(actor) 
 
     def clear(self):
-        print sys._getframe().f_code.co_name
         self.makeCurrent()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	glClearColor(*RGBA(lightgrey))   # Clear The Background Color
@@ -282,7 +291,6 @@ class Canvas(QGLWidget):
             self.camera.pos[1] = self.state[1] + e
             self.display()
         elif self.dynamic == "pan":
-            print "state = ",self.state
             # hor movement sets azimuth
             a = stuur(x,[0,self.statex,w],[-360,0,+360],1.5)
             # vert movement sets elevation
@@ -308,7 +316,12 @@ class Canvas(QGLWidget):
             self.dynamic = "combizoom"
             self.state = [self.camera.distance(),self.camera.fovy]
         
-        
     def mouseReleaseEvent(self,e):
         self.dynamic = None
 
+    def save(self,fn,fmt='PNG'):
+        """Save the current rendering as an image file."""
+        self.makeCurrent()
+        glFinish()
+        qim = self.grabFrameBuffer()
+        qim.save(fn,fmt)

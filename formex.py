@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 ##
-## This file is part of pyformex 0.1 Release Wed Jul  7 12:20:13 2004
+## This file is part of pyformex 0.1.2 Release Fri Jul  9 14:48:57 2004
 ## pyformex is a python implementation of Formex algebra
 ## (c) 2004 Benedict Verhegghe (email: benedict.verhegghe@ugent.be)
+## Releases can be found at ftp://mecatrix.ugent.be/pub/pyformex/
 ## Distributed under the General Public License, see file COPYING for details
 ##
 """Formex algebra in python"""
@@ -305,9 +306,7 @@ class Formex:
         r = b1*f[:,:,0]
         s = math.radians(b2)*f[:,:,1]
         t = math.radians(b3)*f[:,:,2]
-        print r,s,t
         rc = r*sin(t)
-        print rc
         f[:,:,0] = rc*cos(s)
         f[:,:,1] = rc*sin(s)
         f[:,:,2] = r*cos(t)
@@ -318,7 +317,40 @@ class Formex:
         # NOT IMPLEMENTED YET !!! FOR NOW, RETURNS A COPY
         return Formex(self.f)
 
+
+    def bump1(self,dir,a,dist,func):
+        """Return a formex modified (bumped) in one direction.
+
+        dir specifies the axis of the modified coordinates;
+        a is the point that forces the bumping;
+        dist specifies the direction in which the distance is measured;
+        func is a function that calculates the bump intensity from distance
+        !! func(0) should be different from 0.
+        """
+        f = copy.deepcopy(self.f)
+        d = f[:,:,dist] - a[dist]
+        f[:,:,dir] += func(d)*a[dir]/func(0)
+        return Formex(f)
+    
  
+    def bump(dir,points,c=0.5):
+        """Return a formex modified (bumped) in one direction.
+
+        dir specifies the axis of the modified coordinates;
+        points is a list of points that force the bumping;
+        The value of dist is dependant on the bumping mode: line or point.
+        In line mode, the amount of change depends on the distance between
+        the point and the bumping point, measured along one direction (dist);
+        in point mode, dist must be a list of two axis numbers([d1,d2], and
+        the two-dimensional distance in the plane d1,d2 will be used.
+        """
+        for a in p:
+            d = self.f[:,:,0:2] - a[0:2]
+        d = d*d
+        d = sqrt(d[:,:,0] + d[:,:,1])
+        d = a[2]*exp(-c*d)
+        x[:,:,2] += d
+
     # Compatibility functions # deprecated !
         
     def give():
@@ -366,6 +398,12 @@ class Formex:
     def tranax(self,a1,a2,a3,b1,b2,b3,t=None):
         return self.translate([b1-a1,b2-a2,b3-a3],t)
    
+    def rinic(self,*args):
+        n = len(args)/3
+        F = self
+        for d,m,t in zip(args[:n],args[n:2*n],args[2*n:]):
+            F = F.rin(d,m,t)
+        return F
     def rinid(self,n1,n2,t1,t2):
         return self.rin(1,n1,t1).rin(2,n2,t2)
     def rinis(self,n1,n2,t1,t2):
@@ -373,6 +411,12 @@ class Formex:
     def rinit(self,n1,n2,t1,t2):
         return self.rin(2,n1,t1).rin(3,n2,t2)
 
+    def lamic(self,*args):
+        n = len(args)/2
+        F = self
+        for d,p in zip(args[:n],args[n:]):
+            F = F.lam(d,p)
+        return F
     def lamid(self,t1,t2):
         return self.lam(1,t1).lam(2,t2)
     def lamis(self,t1,t2):
@@ -380,17 +424,12 @@ class Formex:
     def lamit(self,t1,t2):
         return self.lam(2,t1).lam(2,t2)
     
-    def rosad(self,a,b,n,angle):
+    def rosad(self,a,b,n=4,angle=90):
         return self.rosette(n,2,[a,b,0],angle)
-    def rosas(self,a,b,n,angle):
+    def rosas(self,a,b,n=4,angle=90):
         return self.rosette(n,1,[a,0,b],angle)
-    def rosat(self,a,b,n,angle):
+    def rosat(self,a,b,n=4,angle=90):
         return self.rosette(n,0,[0,a,b],angle)
-
-    def genid_old(self,n1,n2,t1,t2,bias,taper):
-        P = [ self.translate([i*bias,i*t2,0]).rin(1,n1+i*taper,t1)
-              for i in range(n2) ]
-        return self.concatenate(P)
 
     def genid(self,n1,n2,t1,t2,bias=0,taper=0):
         return self.generate2(n1,n2,0,1,t1,t2,bias,taper)
@@ -412,6 +451,9 @@ class Formex:
         return self.spherical(b1,b2,b3)
 
     pex = unique
+    tic = int
+    def ric(f):
+        return int(round(f))
     
 
 

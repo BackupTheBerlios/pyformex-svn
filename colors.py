@@ -1,4 +1,11 @@
 # Definition of some RGB colors
+##
+## This file is part of pyformex 0.1.2 Release Fri Jul  9 14:48:57 2004
+## pyformex is a python implementation of Formex algebra
+## (c) 2004 Benedict Verhegghe (email: benedict.verhegghe@ugent.be)
+## Releases can be found at ftp://mecatrix.ugent.be/pub/pyformex/
+## Distributed under the General Public License, see file COPYING for details
+##
 
 black   = (0.0,0.0,0.0)
 red     = (1.0,0.0,0.0)

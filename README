@@ -1,8 +1,9 @@
 # README
 ##
-## This file is part of pyformex 0.1 Release Wed Jul  7 12:20:13 2004
+## This file is part of pyformex 0.1.2 Release Fri Jul  9 14:48:57 2004
 ## pyformex is a python implementation of Formex algebra
 ## (c) 2004 Benedict Verhegghe (email: benedict.verhegghe@ugent.be)
+## Releases can be found at ftp://mecatrix.ugent.be/pub/pyformex/
 ## Distributed under the General Public License, see file COPYING for details
 ##
 #
@@ -20,35 +21,49 @@
 
 Howto install:
 -------------
-<TODO>
+Unpack the tarball and go to the pyformex directory
+  tar -xvzf pyformex-VERSION.tar.gz
+  cd pyformex-VERSION
+Edit the top lines of the Makefile to suit your installation
+Then run
+  make install
 
 Howto remove:
 ------------
-<TODO
+<TODO>
+
 
 What you need:
---------------
-python: www.python.org
-  We recommend version 2.2 or higher
+-------------- 
+python: http://www.python.org  
+	(version 2.2 or higher)
 numarray: http://www.stsci.edu/resources/software_hardware/numarray
-  We recommend version 0.8 or higher
-<TODO>
+	(version 0.8 or higher)
+PyOpenGL: http://pyopengl.sourceforge.net/
+	(version 2.0 or higher)
+PyQt: http://www.riverbankcomputing.co.uk/pyqt/
+	(version 0.9 or higher)
+
 
 
 Why:
 ---
 <TODO>
 
+
 Why Python:
 ----------
-Because it is simply the quickest to learn and most powerful scripting language I know (and that I like to program with). More on www.python.org
+Because
+ - it is very easy to learn (See www.python.org)
+ - it is extremely powerful (More on www.python.org)
+ - I just like to use it
 
 
 ToDo:
 ----
 A LOT!
 
-But this is a list of things we have to do before we go public:
+But this is a list of things we want to do before we go public:
 
 - introduce all (or most) of the formian functions
 - provide basic documentation
@@ -58,6 +73,7 @@ But this is a list of things we have to do before we go public:
 
 And these ideas might be useful:
 - on installation, create a remove script
+- create a batch run mode
 
 
 

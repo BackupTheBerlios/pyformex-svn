@@ -1,8 +1,9 @@
 # Makefile for pyformex
 ##
-## This file is part of pyformex 0.1 Release Wed Jul  7 12:20:13 2004
+## This file is part of pyformex 0.1.2 Release Fri Jul  9 14:48:57 2004
 ## pyformex is a python implementation of Formex algebra
 ## (c) 2004 Benedict Verhegghe (email: benedict.verhegghe@ugent.be)
+## Releases can be found at ftp://mecatrix.ugent.be/pub/pyformex/
 ## Distributed under the General Public License, see file COPYING for details
 ##
 #
@@ -22,14 +23,14 @@ DOCDIR= $(ROOTDIR)/share/doc
 
 ############# NOTHING CONFIGURABLE BELOW THIS LINE ###################
 
-VERSION= 0.1.1
+VERSION= 0.1.2
 PYFORMEXDIR= pyformex-$(VERSION)
 INSTDIR= $(LIBDIR)/$(PYFORMEXDIR)
 DOCINSTDIR= $(DOCDIR)/$(PYFORMEXDIR)
 PROGRAM= pyformex
 SOURCE= formex.py canvas.py camera.py colors.py vector.py
 DOCFILES= README COPYING History
-EXAMPLES= 
+EXAMPLES= examples/*.py
 STAMPABLE= README History Makefile
 NONSTAMPABLE= COPYING 
 STAMP= ./Stamp 
@@ -74,4 +75,4 @@ dist.stamped:
 
 distclean:
 	rm -rf $(PYFORMEXDIR)
-
+	alldirs . "rm -f *~"

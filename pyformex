@@ -1,13 +1,42 @@
 #!/usr/bin/env python
-"""A formian-alike python"""
+##
+## This file is part of pyformex 0.1.2 Release Fri Jul  9 14:48:57 2004
+## pyformex is a python implementation of Formex algebra
+## (c) 2004 Benedict Verhegghe (email: benedict.verhegghe@ugent.be)
+## Releases can be found at ftp://mecatrix.ugent.be/pub/pyformex/
+## Distributed under the General Public License, see file COPYING for details
+##
+"""pyformex is a python implementation of Formex algebra"""
 
 Version="pyFormex 0.1"
-import sys,time
 
 from formex import *
 from canvas import *
 
-       
+import sys,time,os.path,string
+ 
+class FileSelectionDialog(QFileDialog):
+    """A file selection dialog widget.
+
+    You can specify a default path/filename that will be suggested
+    initially.
+    If a pattern is specified, only matching files will be shown.
+    A pattern can be something like 'Images (*.png *.jpg)'.
+    Default mode is to accept only existing files. You can specify
+    any QFileDialog mode (e.g. QFileDialog.AnyFile to accept new files)
+    
+    """
+    def __init__(self,default=None,pattern=None,mode=QFileDialog.ExistingFile):
+        QFileDialog.__init__(self,default,pattern)
+        self.setMode(mode)
+        self.show()
+    def getFilename(self):
+        self.exec_loop()
+        if self.result() == QDialog.Accepted:
+            return str(self.selectedFile())
+        else:
+            return None
+      
 def AddMenuItems(menu, items=[]):
     """Add a list of items to a menu.
 
@@ -21,6 +50,9 @@ def AddMenuItems(menu, items=[]):
     'Action' is an active item. Its value is an instruction that is to be
     executed when the item is activated. It will be executed by calling
     python's eval(Value) instruction.
+    !!! For now, Actions are limited to global function names (no arguments)
+    
+    'VAction' is a tuple of an action and an integer argument.
     'QAction' signals that value is a qt QAction. Text may be None if it
     was already set in constructuting the QAction.
     """
@@ -33,6 +65,11 @@ def AddMenuItems(menu, items=[]):
             menu.insertItem(txt,pop)
         elif key == "Action":
             menu.insertItem(txt,eval(val))
+        elif key == "VAction":
+            id = menu.insertItem(txt,eval(val[0]))
+            menu.setItemParameter(id,val[1])
+        elif key == "Statement":
+            menu.insertItem(txt,val)
         elif key == "QAction":
             if txt:
                 val.setProperty("menuText",QVariant(txt))
@@ -45,6 +82,7 @@ MenuData = [
     ("Popup","&File",[
         ("Action","&Save","save"),
         ("Action","Save &As","saveAs"),
+        ("Action","Save &Image","saveImage"),
         ("Sep",None,None),
         ("Action","&Play","play"),
         ("Action","&Record","record"),
@@ -54,24 +92,10 @@ MenuData = [
         ("Action","&Test","test"), 
         ("Action","&Print","printit"), 
         ("Action","&Bbox","bbox"), 
+        ("Action","&Wireframe","wireframe"), 
+        ("Action","&Smooth","smooth"),
         ("Action","&Clear","clear"),
         ("Action","&Redraw","redraw"), ]),
-    ("Popup","&Examples",[
-        ("Action","&Dome","exampleDome"),
-        ("Action","&ScallopDome","exampleScallopDome"),
-        ("Action","&Double Layer","exampleDoubleLayer"),
-        ("Action","&Parabolic Tower","exampleParabolicTower"),
-        ("Action","&Geodetic","exampleGeodetic"),
-        ("Action","&Diamatic","exampleDiamatic"),
-        ("Action","&Hyparcap","exampleHyparcap"), ]),
-    ("Popup","&View",[
-        ("Action","&Front View","frontView"),
-        ("Action","&Back View","frontView"),
-        ("Action","&Right View","rightView"),
-        ("Action","&Left View","leftView"),
-        ("Action","&Top View","topView"),
-        ("Action","&Bottom View","bottomView"),
-        ("Action","&Isometric View","isoView"), ]),
     ("Popup","&Camera",[
         ("Action","&Zoom In","zoomIn"), 
         ("Action","&Zoom Out","zoomOut"), 
@@ -87,19 +111,130 @@ MenuData = [
         ("Action","Rotate &Down","rotDown"),  ]),
     ("Popup","&Help",[
         ("Action","&Help","Help"),
-        ("Action","&About","About"), ])]
+        ("Action","&About","about"), 
+        ("Action","&Warning","testwarning"), ])]
 
+# Views Menu
+
+def insertViewMenu():
+    """Insert the default views menu in the menudata."""
+    global MenuData,BuiltinViews
+    BuiltinViews = ['front','back','right','left','top','bottom','iso']
+    vm = ("Popup","&View",[
+        ("VAction","&%s View"%t,("viewNr",i)) for i,t in enumerate(BuiltinViews)
+        ])
+    MenuData.insert(2,vm)
+
+# This function is here because the menus slot/signal only support integer args
+def viewNr(i):
+    global BuiltinViews
+    """Show one of the builtin views by its number"""
+    view(BuiltinViews[i])
+    
+def view(v):
+    """Show a named view, either a builtin or a user defined."""
+    global canvas,bbox,BuiltinViews
+    if v in BuiltinViews:
+        canvas.setView(bbox,v)
+        canvas.display()
+    else:
+        warning("This view has not been created yet")
+
+# Examples Menu
+
+def insertExamplesMenu():
+    """Insert the examples menu in the menudata."""
+    global dirname,examples
+    dir = os.path.join(dirname,"examples")
+    if os.path.isdir(dir):
+        examples = filter(lambda s:s[-3:]==".py",os.listdir(dir))
+    vm = ("Popup","&Examples",[
+        ("VAction","&%s"%os.path.splitext(t)[0],("runExample",i)) for i,t in enumerate(examples)
+        ])
+    MenuData.insert(4,vm)
+
+def runExample(i):
+    """Run example i from the list of found examples."""
+    global dirname,examples
+    replay(os.path.join(dirname,"examples",examples[i]))
+
+
+# Actions
 
 def NotImplemented():
-    print "This option has not been implemented yet!"
+    warning("This option has not been implemented yet!")
 
 Help = NotImplemented
-About = NotImplemented
 save = NotImplemented
 saveAs = NotImplemented
-play = NotImplemented
 record = NotImplemented
 out=None
+
+def about():
+    about = QMessageBox()
+    about.about(about,"About pyFormex",
+        Version+"\n\n"
+        "pyFormex is a python implementation of Formex algebra\n\n"
+        "Copyright 2004 Benedict Verhegghe\n"
+        "Distributed under the GNU General Public License.\n\n"
+        "Downloads available from ftp://mecatrix.ugent.be/pub/pyformex\n\n"
+        "For help or information, mailto benedict.verhegghe@ugent.be\n" )
+
+def testwarning():
+    warning("Smoking may be hazardous to your health!")
+def warning(s):
+    global options
+    if options.gui:
+        w = QMessageBox()
+        w.warning(w,Version,s)
+    else:
+        print s
+
+
+##def save():
+##    global renwin,savefile
+##    SaveRendering(renwin,savefile)
+##def saveAs():
+##    global renwin,savefile
+##    fs = FileSelectionDialog(savefile.getPattern())
+##    fn = fs.getFilename()
+##    if fn:
+##        savefile.setPattern(fn)
+##        SaveRendering(renwin,savefile)
+def saveImage():
+    """Save the current rendering in image format."""
+    global canvas
+    fs = FileSelectionDialog(pattern="Images (*.png *.jpg)",mode=QFileDialog.AnyFile)
+    fn = fs.getFilename()
+    if fn:
+        fmt = string.upper(os.path.splitext(fn)[1])
+        if len(fmt) > 0 and fmt[0] == '.':
+            fmt = fmt[1:]
+            if fmt == 'JPG':
+                fmt = 'JPEG'
+        else:
+            fmt = 'PNG'
+            fn += '.png'
+        if fmt in QImage.outputFormats():
+            canvas.save(fn,fmt)
+        else:
+            warning("Sorry, can not save in %s format!\n"
+                    "Suggest you use PNG format ;)"%fmt)
+
+def wireframe():
+    global canvas
+    canvas.glinit("wireframe")
+    draw(out)
+def smooth():
+    global canvas
+    canvas.glinit("render")
+    draw(out)
+
+def play():
+    fs = FileSelectionDialog(".","pyformex scripts (*.frm *.py)")
+    fn = fs.getFilename()
+    if fn:
+        replay(fn)
 def test():
     draw(maketest(0))
 def printit():
@@ -114,34 +249,7 @@ def clear():
 def redraw():
     global canvas
     canvas.display()
-def frontView():
-    global canvas,bbox
-    canvas.setView(bbox,'front')
-    canvas.display()
-def backView():
-    global canvas,bbox
-    canvas.setView(bbox,'back')
-    canvas.display()
-def rightView():
-    global canvas,bbox
-    canvas.setView(bbox,'right')
-    canvas.display()
-def leftView():
-    global canvas,bbox
-    canvas.setView(bbox,'left')
-    canvas.display()
-def topView():
-    global canvas,bbox
-    canvas.setView(bbox,'top')
-    canvas.display()
-def bottomView():
-    global canvas,bbox
-    canvas.setView(bbox,'bottom')
-    canvas.display()
-def isoView():
-    global canvas,bbox
-    canvas.setView(bbox,'iso')
-    canvas.display()
+
 def zoomIn():
     global canvas
     canvas.zoom(0.8)
@@ -191,6 +299,16 @@ def dollyOut():
     canvas.camera.dolly(1.25)
     canvas.display()   
 
+def replay(fn,ask=False):
+    """Play a formex script from file fn"""
+    canvas.updateGL()
+    if ask:
+        for line in file(fn,"r"):
+            print line
+        ans = raw_input(line.rstrip('\n')+" -- Execute this script (y/n)? ")
+        ask = ans != 'y'
+    if not ask:
+        execfile(fn)
 
     
 def draw(F,camera=True,side="front"):
@@ -210,32 +328,26 @@ def exit():
         app.quit()
     else:
         sys.exit(0)
-
-def GUI():
-    global canvas
-    w = QMainWindow()
-    w.setCaption(Version)
-    w.resize(640,480)
-    # add widgets to the main window
-    s = w.statusBar()
-    s.message(Version+" (c) B. Verhegghe")
-    m = w.menuBar()
-    AddMenuItems(m,MenuData)
-    # Create a nice frame to put around the OpenGL widget
-    # Create our display widget
-    f = QHBox(w, "frame")
-    f.setFrameStyle(QFrame.Sunken | QFrame.Panel)
-    f.setLineWidth(2)
-    f.resize(640,480)
-    from qtgl import QGLFormat
-    fmt = QGLFormat.defaultFormat()
-    fmt.setDirectRendering(options.dri)
-    canvas = Canvas(640,480,fmt,f)
-    canvas.clear()
-    canvas.camera.setPos(0,0,5)
-    # Put the GL widget inside the frame
-    w.setCentralWidget(f)
-    return w
+                     
+def exampleDome():
+    replay("examples/Dome.py")
+def exampleDoubleLayer():
+    replay("examples/DoubleLayer.py")
+def exampleParabolicTower():
+    replay("examples/ParabolicTower.py") 
+def exampleGeodetic():
+    replay("examples/Geodetic.py") 
+def exampleDiamatic():
+    replay("examples/Diamatic.py") 
+def exampleScallopDome():
+    replay("examples/ScallopDome.py")
+def exampleBarrelVault():
+    replay("examples/BarrelVault.py")
+def exampleNovation():
+    replay("examples/Novation.py")
+def exampleHyparcap():
+    replay("examples/Hyparcap.py")
+    
 
 testnr=0
     
@@ -261,114 +373,38 @@ def maketest(nr=0):
         out = G.bp(0.75,15)
     elif nr == 4:
         E = Formex([[[5,1,1],[5,2,1]]]).rinit(6,5,1,1) + Formex([[[5,1,1],[5,1,2]]]).rinit(7,4,1,1)
-        print E
         G = E.bs(1,30,5)
         out=G
     return out
-
-def exampleDome():
-    global out
-    ny=12; nz=8; rd=100; a=2; t=50;
-    e = Formex([[[1,0,a],[1,1,1+a]]])
-    f1 = e.rosat(1,1+a).rinit(ny,nz,2,2).bs(rd,180/ny,t/(2*nz+a))
-    f2 = Formex([[[1,0,a],[1,2,a]]]).rinit(ny,2,2,2*nz).bs(rd,180/ny,t/(2*nz+a))
-    out = f1 + f2
-    # use&,vt(1),vm(2),vh(10,10,20,0,0,0,0,0,1); draw f;
-    draw(out)
-
-def exampleDoubleLayer():
-    global out
-    n=10; a=2./3.; d=1./n;
-    e1 = Formex([[[0,0,d],[2,0,d]],[[2,0,d],[1,1,d]],[[1,1,d],[0,0,d]]])
-    e2 = Formex([[[0,0,d],[1,1-a,0]],[[2,0,d],[1,1-a,0]],[[1,1,d],[1,1-a,0]]])
-    e4 = e1.genid(n,n,2,1,1,-1).bb(1./(2*n),1./(2*n)/tan(radians(30)))
-    e5 = e1.genid(n-1,n-1,2,1,1,-1).translate([1,1-a,-d]).bb(1./(2*n),1./(2*n)/tan(radians(30)))
-    e6 = e2.genid(n,n,2,1,1,-1).bb(1./(2*n),1./(2*n)/tan(radians(30)))
-    out = (e4+e5+e6).tran(3,-d)
-    # use &,vm(2),vh(10,6,1000,0,0,0,0,0,1); draw e; mape=1.0;
-    draw(out)
-
-def exampleParabolicTower():
-    global out
-    h = 25.   # height of tower
-    h1 = 18.  # height at neck of tower
-    r = 10.   # radius at base of tower
-    r1 = 5.   # radius at neck of tower
-    m = 10    # number of sides at the base   
-    n = 8     # number of levels
-    a = (r-r1)/h1**2; b = -2*a*h1; c = r; d = h/n
-    g = lambda i: a*(d*i)**2 + b*d*i + c
-    f = concatenate([  [[[g(i),i,i], [g(i+1),i-1,i+1]],
-                 [[g(i),i,i], [g(i+1),i+1,i+1]],
-                 [[g(i+1),i-1,i+1], [g(i+1),i+1,i+1]]] for i in range(n) ])
-    #f = concatenate([ i for i in f ])
-    print f.shape
-    F = Formex(f).rin(2,m,2)
-    T = F.bc(1,360./(2*m),d)
-    out = T
-    draw(out,side="bottom")
     
-def exampleGeodetic():
-    global out
-    m=5; n=5; v=0.5*sqrt(3.)
-    a = Formex([[[0,0,0],[1,0,0],[0.5,v,0]]])
-    aa = Formex([[[1,0,0],[1,0,0],[0.5,v,0]]])
-    d = a.genid(m,n,1,v,0.5,-1)
-    dd = aa.genid(m-1,n-1,1,v,0.5,-1)
-    e = (d+dd).rosad(m*0.5,n*v,6,60)
-    out = e
-    draw(out)
-    
-def exampleDiamatic():
-    global out
-    rt = 36.
-    rb = 34.5
-    m = 6
-    n = 6
-    a = 36.
-    T = Formex([[[rt,0,0],[rt,0,3]],[[rt,0,0],[rt,3,3]],[[rt,0,3],[rt,3,3]]])
-    W1 = Formex([[[rb,1,2],[rt,0,0]],[[rb,1,2],[rt,0,3]],[[rb,1,2],[rt,3,6]]])
-    W2 = Formex([[[rb,2,4],[rt,3,6]],[[rb,2,4],[rt,0,3]],[[rb,2,4],[rt,3,3]]])
-    B1 = Formex([[[rb,2,4],[rb,1,2]],[[rb,2,4],[rb,1,5]],[[rb,2,4],[rt,4,5]]])
-    B2 = Formex([[[rb,1,2],[rb,-1,2]]])
-    top = T.genit(1,m,3,3,0,1)
-    web = W1.genit(1,m,3,3,0,1) + W2.genit(1,m-1,3,3,0,1)
-    bot = B1.genit(1,m-1,3,3,0,1) + B2.rin(3,m,3)
-    out = top+web+bot
-    draw(out)
 
-def exampleScallopDome():
-    global out
-    a=0; g=60; m=1; p=0;
-    f1 = Formex([[[10,0,0],[10,0,1]],[[10,0,1],[10,1,1]]]).genit(1,8,1,1,0,1) + Formex([[[10,0,1],[10,1,2]]]).genit(1,7,1,1,0,1)
-    f2 = Formex([[[10,0,1],[10,1,1]]]).genit(1,4,0,2,1,0)
-    out = f1+f2
-    draw(out)
-    
-def exampleHyparcap(): #NOT COMPLETE
-    global out
-    a = 3 # verdeelparameter
-    x = -((1-sqrt(5))/2) # gulden getal
-    s = 30. # overspanning
-    m = 5; b = 360./m # pentacap
-    k1 = 0.035 # steilte
-    hoek = (90.-b)/2
-    d = 2. # laagdikte
-    c = (x*s+k1*s*s/2*sin(radians(2*hoek)))/(k1*s*cos(radians(hoek))+k1*s*sin(radians(hoek))) # pentacapvoorwaarde
-    # compret van 1 blad
-    T = Formex([[[-a,0,d],[-a+2,0,d]],[[-a,0,d],[1-a,3,d]],[[1-a,3,d],[2-a,0,d]]])
-    B = Formex([[[1-a,-1,0],[3-a,-1,0]],[[1-a,-1,0],[2-a,2,0]],[[2-a,2,0],[3-a,-1,0]]])
-    W1 = Formex([[[2-a,2,0],[1-a,3,d]],[[2-a,2,0],[3-a,3,d]],[[2-a,2,0],[2-a,0,d]]])
-    W2 = Formex([[[1-a,-1,0],[-a,0,d]],[[1-a,-1,0],[2-a,0,d]],[[1-a,-1,0],[1-a,-3,d]]])
-    W3 = Formex([[[0,3*a,d],[0,3*(a-1)-1,0]]])
-    top = T.genid(a,a,2,3,1,-1).lam(2,0).unique()
-    bot = B.genid(a-1,a-1,2,3,1,-1).lam(2,-1).unique()
-    web = W1.genid(a-1,a-1,2,3,1,-1) + W2.genid(a,a,2,-3,1,-1) + W3
-    blad = (top+bot+web).scale([1.,1./3,1.]).tranid(0,a)
-    vlakblad = blad.scale([s*sin(radians(b/2))/a,s*cos(radians(b/2)),1.])
-    out = blad
-    draw(out)
-
+def GUI():
+    global canvas,option
+    w = QMainWindow()
+    w.setCaption(Version)
+    w.resize(640,480)
+    # add widgets to the main window
+    s = w.statusBar()
+    s.message(Version+" (c) B. Verhegghe")
+    m = w.menuBar()
+    insertViewMenu()
+    insertExamplesMenu()
+    AddMenuItems(m,MenuData)
+    # Create a nice frame to put around the OpenGL widget
+    # Create our display widget
+    f = QHBox(w, "frame")
+    f.setFrameStyle(QFrame.Sunken | QFrame.Panel)
+    f.setLineWidth(2)
+    f.resize(640,480)
+    from qtgl import QGLFormat
+    fmt = QGLFormat.defaultFormat()
+    fmt.setDirectRendering(options.dri)
+    canvas = Canvas(640,480,fmt,f)
+    canvas.clear()
+    canvas.camera.setPos(0,0,5)
+    # Put the GL widget inside the frame
+    w.setCentralWidget(f)
+    return w
     
 def runApp(args):
     global app,canvas
@@ -380,14 +416,16 @@ def runApp(args):
     gui.show()
     canvas.show()
     canvas.clear()
+    options.gui = True
     app.exec_loop()
    
 def main(argv=None):
     """This is a fairly generic main() function"""
-    global options
+    global options,dirname
     # this allows us to call main from the interpreter
     if argv is None:
         argv = sys.argv
+    dirname = os.path.dirname(os.path.realpath(argv[0]))
     #process options
     from optparse import OptionParser,make_option
     parser = OptionParser(
