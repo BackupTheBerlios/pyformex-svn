@@ -14,117 +14,7 @@ from OpenGL.GLU import *
 from Colors import *
 from Formex import *
 from Geometry import *
-
-class Camera:
-    """This class defines a camera."""
-
-    def __init__(self):
-        """Create a new camera at position (0,0,0) looking along the -z axis"""
-        self.setPosition(0.,0.,0.)
-        self.setAngles(0.,0.,0.)
-        self.near = None
-        self.setFovy(45.,4./3.)
-        self.setClip(0.1,10.)
-        self.setPerspective(True)
-        self.setCenter(0.,0.,0.)
-
-    def setPosition(self,x,y,z):
-        """Set the camera position"""
-        self.eye = [x,y,z]
-        
-    def setAngles(self,x,y,z):
-        """Set the camera rotation angles around x,y,z axes"""
-        self.rotx,self.roty,self.rotz = x,y,z
-
-    def loadMatrix(self):
-        """Load the camera transformation matrix"""
-        glRotatef(-self.rotx, 1.0, 0.0, 0.0)
-        glRotatef(-self.roty, 0.0, 1.0, 0.0)
-        glRotatef(-self.rotz, 0.0, 0.0, 1.0)
-        glTranslatef(-self.eye[0],-self.eye[1],-self.eye[2])
-
-    def setCenter(self,x,y,z):
-        """Set the center of the scene.
-
-        This can be used to aim the camera at the action."""
-        self.center = [x,y,z]
-
-    def setFovy(self,fovy,aspect=4./3):
-        """Set the field of view of the camera.
-
-        We set the field of view by the vertical opening angle fovy
-        and the aspect ratio (width/height) of the viewing volume.
-        """
-        self.fovy = fovy
-        self.aspect = aspect
-        self.setFrustum()
-
-    def setFrustum(self):
-        """Set the frustum parameters from camera parameters"""
-        if self.near and self.fovy and self.aspect:
-            self.top = self.near * math.tan(math.radians(self.fovy/2))
-            self.bottom = -self.top
-            self.right = self.top*self.aspect
-            self.left = self.bottom*self.aspect
-        
-    def setClip(self,near,far):
-        """Set the near and far clipping planes"""
-        if near > 0 and near < far:
-            self.near,self.far = near,far
-            self.setFrustum()
-        else:
-            print "Error: Invalid Near/Far clipping values""" 
-
-    def setPerspective(self,on=True):
-        """Set perspective on or off"""
-        self.perspective = on
-
-    def setProjection(self):
-        """Load the projection/perspective matrix."""
-	glMatrixMode(GL_PROJECTION)
-	glLoadIdentity()
-        print self.left,self.right,self.top,self.bottom,self.near,self.far
-        if self.perspective:
-            #gluPerspective(self.fovy,self.aspect,self.near,self.far)
-            glFrustum(self.left,self.right,self.top,self.bottom,self.near,self.far)
-        else:
-            glOrtho(self.left,self.right,self.top,self.bottom,self.near,self.far)
-	glMatrixMode(GL_MODELVIEW)     
-
-    def lookAt(self,points):
-        """Set up the camera so that the specified points become visible.
-
-        The points are specified as a numarray of shape (n,3).
-        These could e.g. be the corners of the scene's bounding box.
-        The camera is aimed at the center of the specified points.
-        The position of the camera is not changed.
-        Then the camera's opening angle and the near and far clipping planes
-        are set such that all the points are in the frustum.
-        
-        """
-        center = add.reduce(points) / points.shape[0]
-        print center
-        self.setCenter(*center)
-        #gluLookAt (*(self.eye+self.center+self.up))
-
-    def zoom(val=2):
-        """Zoom in/out by shrinking/enlarging the camera view angle.
-
-        The zoom factor is relative to the current setting.
-        Use setFovy() to specify an absolute setting.
-        """
-        if val>0:
-            self.setFovy(self.fovy*val)
-
-    def zoomDolly(val=2):
-        """Zoom in/out by moving the camera towards/away from scene.
-        A value > 1 zooms in, value < 1 zooms out.
-        The value will approximately be the enlargement of the view.
-        """
-        d = distance(eye,center)
-        
-        
-
+from Camera import *
 
 class FormexActor(Formex):
     """An OpenGL actor which is a Formex"""
@@ -133,14 +23,14 @@ class FormexActor(Formex):
         Formex.__init__(self,F.formex())
         
     def display(self):
-        """Draw a 2D formex of line elements.
+        """Draw a formex of line elements.
 
         """
         glBegin(GL_LINES)
-        for cantle in self.formex():
-            if len(cantle) == 2:
-                glVertex2f(float(cantle[0][0]),float(cantle[0][1]))
-                glVertex2f(float(cantle[1][0]),float(cantle[1][1]))
+        for el in self.formex():
+            if len(el)==2:
+                glVertex3f(*el[0])
+                glVertex3f(*(el[1]))
         glEnd()
 
 
@@ -273,6 +163,51 @@ class Canvas(QGLWidget):
 	if h == 0:	# Prevent A Divide By Zero If The Window Is Too Small 
             h = 1
 	glViewport(0, 0, w, h)
+        self.aspect = float(w)/h
+        self.camera.setLens(aspect=self.aspect)
 	self.camera.setProjection()
         self.display()
+
+    def setView(self,bbox,side='front'):
+        """Sets the camera looking at one of the sides of the bbox"""
+        self.makeCurrent()
+        pos = (bbox[0]+bbox[1])/2
+        size = bbox[1]-bbox[0]
+        dist = 1.5*max(size[0]/self.aspect,size[1])
+        if side == 'front':
+            hsize,vsize = size[0],size[1]
+            angles = (0,0,0)
+            self.eye[2] = bbox[1][2]+dist
+        elif side == 'right':
+            hsize,vsize = size[2],size[1]
+            angles = (0,90,0)
+            self.eye[0] = bbox[1][0]+dist
+        elif side == 'top':
+            hsize,vsize = size[0],size[2]
+            angles = (-90,0,0)
+            self.eye[1] = bbox[1][1]+dist
+        elif side == 'back':
+            hsize,vsize = size[0],size[1]
+            angles = (0,180,0)
+            self.eye[2] = bbox[1][2]+dist
+        elif side == 'left':
+            hsize,vsize = size[2],size[1]
+            angles = (0,0,0)
+            self.roty = 90.
+            self.eye[0] = bbox[1][0]+dist
+        elif side == 'bottom':
+            hsize,vsize = size[0],size[2]
+            angles = (0,0,0)
+            self.rotx = -90.
+            self.eye[1] = bbox[1][1]+dist
+        self.camera.setPosition(*center)
+        self.camera.setAngles(0,0,0)
+        self.camera.setProjection()
+
+    def zoom(self,val):
+        """Zoom in/out by shrinking/enlarging the camera view angle."""
+        self.makeCurrent()
+        self.camera.zoom(val)
+        self.camera.setProjection()
+        
 

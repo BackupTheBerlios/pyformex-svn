@@ -8,8 +8,7 @@ from Formex import *
 from Menu import *
 from Canvas import *
 
-
-        
+       
 def AddMenuItems(menu, items=[]):
     """Add a list of items to a menu.
 
@@ -54,11 +53,21 @@ MenuData = [
         ("Action","E&xit","exit"), ]),
     ("Popup","&Display",[
         ("Action","&Test","test"), 
+        ("Action","&Print","printit"), 
+        ("Action","&Bbox","bbox"), 
         ("Action","&Clear","clear"),
         ("Action","&Redraw","redraw"), ]),
+    ("Popup","&View",[
+        ("Action","&Zoom In","zoomIn"), 
+        ("Action","&Zoom Out","zoomOut"), 
+        ("Action","&Front View","frontView"),
+        ("Action","&Right View","rightView"),
+        ("Action","&Top View","topView"),
+        ("Action","&Rotate Y","rotateY"), ]),
     ("Popup","&Help",[
         ("Action","&Help","Help"),
         ("Action","&About","About"), ])]
+
 
 def NotImplemented():
     print "This option has not been implemented yet!"
@@ -69,22 +78,59 @@ save = NotImplemented
 saveAs = NotImplemented
 play = NotImplemented
 record = NotImplemented
+out=None
+def test():
+    draw(maketest(0))
+def printit():
+    global out
+    print out
+def bbox():
+    global out
+    print "bbox ",out.bbox()
 def clear():
     global canvas
     canvas.clear()
 def redraw():
     global canvas
     canvas.display()
+def zoomIn():
+    global canvas
+    canvas.zoom(2)
+    canvas.display()
+def zoomOut():
+    global canvas
+    canvas.zoom(0.5)
+    canvas.display()
+def frontView():
+    global canvas,bbox
+    canvas.setView(bbox,'front')
+    canvas.display()
+def rightView():
+    global canvas,bbox
+    canvas.setView(bbox,'right')
+    canvas.display()
+def topView():
+    global canvas,bbox
+    canvas.setView(bbox,'top')
+    canvas.display()
+def rotateY():
+    global canvas,bbox
+    canvas.camera.setAngles(0,canvas.camera.roty+15,0)
+    canvas.display()
+
+
     
 def draw(F,camera=1):
     """Draw a Formex on the canvas"""
-    global canvas
+    global canvas,bbox
     canvas.removeAllActors()
-    if camera:
-        canvas.setViewingVolume(F.bbox())
     canvas.addActor(FormexActor(F))
+    bbox = F.bbox()
+    print "bbox = ",bbox
+    if camera:
+        canvas.setView(bbox)
     canvas.display()
-    time.sleep(1)
+
 
 def exit():
     global app
@@ -96,11 +142,11 @@ def exit():
 def GUI():
     global canvas
     w = QMainWindow()
-    w.setCaption("Forming 0.1")
+    w.setCaption(Version)
     w.resize(640,480)
     # add widgets to the main window
     s = w.statusBar()
-    s.message("Forming 0.1 (c) B. Verhegghe")
+    s.message(Version+" (c) B. Verhegghe")
     m = w.menuBar()
     AddMenuItems(m,MenuData)
     # Create a nice frame to put around the OpenGL widget
@@ -114,48 +160,38 @@ def GUI():
     fmt.setDirectRendering(options.dri)
     canvas = Canvas(640,480,fmt,f)
     canvas.clear()
+    canvas.camera.setPosition(0,0,5)
     # Put the GL widget inside the frame
     w.setCentralWidget(f)
     return w
-  
-def test():
-    global canvas
-    print "This is a test of formex algebra"
-    F = Formex([[[1,0],[0,1]],[[0,1],[1,2]]])
-    print "F =",F
-    F1 = F.tran(1,6)
-    print "F1 =",F1
-    F2 = F.ref(1,2)
-    print "F2 =",F2
-    F3 = F.ref(1,1.5).tran(2,2)
-    print "F3 =",F3
-    H = F.rin(1,4,2)
-    print "H =",H
-    R = F.lam(1,1)
-    print "R =",R
-    G = F.lam(1,1).lam(2,1).rin(1,10,2).rin(2,6,2)
-    print "G =",G
-    draw(G)
-    time.sleep(1)
-    E = Formex([[[1,1.5],[1,1]],[[1,1],[2,1]]])
-    print "E =",E
-    K = E.ros(1,2,3,1,5,-45)
-    print "K =",K
-    draw(K)
-    time.sleep(1)
-    N = Formex([[[0,0],[2,0]],[[0,0],[1,1]],[[2,0],[1,1]]])
-    M = N.genid(4,3,2,1,1,-1)
-    draw(M)
-    time.sleep(1)
-    G = F.lamid(1,1).rinid(10,6,2,2)
-    draw(G.bb(1.5,0.8))
-    time.sleep(1)
-    draw(G.bp(0.75,15))
-    time.sleep(1)
-##    E = Formex([[[5,1,1],[5,2,1]]]).rinit(6,5,1,1) + Formex([[[5,1,1],[5,1,2]]]).rinid(7,4,1,1)
-##    draw(E)
-##    time.sleep(1)
+
+testnr=0
     
+def maketest(nr=0):
+    global testnr,F,G,out
+    if nr == 0:
+        nr = testnr
+        testnr += 1
+    print "Test nr. %d"%nr 
+    if nr == 0:
+        F = Formex([[[1,0],[0,1]],[[0,1],[1,2]]])
+        out = F.lam(1,1).lam(2,1).rin(1,10,2).rin(2,6,2)
+    elif nr == 1:
+        E = Formex([[[1,1.5],[1,1]],[[1,1],[2,1]]])
+        out = E.ros(1,2,3,1,5,-45)
+    elif nr == 2:
+        N = Formex([[[0,0],[2,0]],[[0,0],[1,1]],[[2,0],[1,1]]])
+        out = N.genid(4,3,2,1,1,-1)
+    elif nr == 3:
+        G = F.lamid(1,1).rinid(10,6,2,2)
+        out = G.bb(1.5,0.8)
+    elif nr == 3:
+        out = G.bp(0.75,15)
+    elif nr == 4:
+        out = Formex([[[5,1,1],[5,2,1]]]).rinit(6,5,1,1) + Formex([[[5,1,1],[5,1,2]]]).rinit(7,4,1,1)
+    return out
+
+     
 def runApp(args):
     global app,canvas
     app = QApplication(sys.argv)

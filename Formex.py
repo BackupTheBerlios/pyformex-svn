@@ -4,14 +4,26 @@
 from numarray import *
 import math
 
+# Update 02 Jul 2004
+# For simplicity's sake, we work now only with 3-D coordinates.
+# Formex operations in 2-D are not so very useful anyway.
+# The user can continue to create formices in a 2-D space,
+# but internally they will be stored with 3 coordinates, adding a z-value 0.
+# A special operator formex2D lets you extrac a 2-D coordinate list
+
 class Formex:
     """A formex is a numarray of order 3. An element is a uniple. A row along the axis 2 is a signet. A plane along axes 2 and 1 is a cantle.
+
     """
 
     def __init__(self,l=[[[]]]):
         self.f = array(l,type=Float32)
         if len(self.f.shape) != 3:
             raise RuntimeError,"Invalid data in creating Formex"
+        if self.f.shape[2] == 2:
+            f = zeros((self.f.shape[:2]+(3,)),type=Float32)
+            f[:,:,:2] = self.f
+            self.f = f
 
     def order(self):
         """Return the order of the Formex
@@ -113,7 +125,7 @@ class Formex:
         """Return the boundary box of the Formex"""
         min = [ self.f[:,:,i].min() for i in range(self.f.shape[2]) ]
         max = [ self.f[:,:,i].max() for i in range(self.f.shape[2]) ]
-        return [min, max] 
+        return array([min, max]) 
 
     def center(self):
         """Return the center of the Formex"""

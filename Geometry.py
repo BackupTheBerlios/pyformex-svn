@@ -1,3 +1,8 @@
+"""Operations on 3-D vectors.
+
+An input vector can be specified as a list or as a numarray.
+"""
+
 from numarray import *
 
 # These functions return a scalar:
@@ -9,16 +14,34 @@ def length(a):
     """
     return sqrt(dot(a,a))
     
-def distance(a,b):
-    """Calculate the distance between two points.
+def diff(a,b):
+    """Return the difference between two vectors.
 
-    Apoint is a list of three coordinates.
+    The vector can be specified as a list or as an array.
     """
+    return array(b) - array(a)
+    
+def distance(a,b):
+    """Return the distance between two points."""
     return length(array(b) - array(a))
 
 def projection(a,b):
     """Return the length of the projection of vector a on vector b."""
     return dot(a,b)/length(b)
+
+def fromSpherical(a):
+    """Transforms spherical coordinates to cartesian.
+
+    Input vector a = [ distance, azimuth, elevation ], where
+    azimuth = angle in degrees around y-axis, starting from z-axis (90 is x)
+    elevation = angle in degrees around the x-axis (+90 is the -y direction)
+    """
+    az = math.radians(a[1])
+    el = math.radians(a[2])
+    c = a[0]*math.cos(el)
+    s = a[0]*math.sin(el)
+    return [ c*math.sin(az), -s, c*math.cos(az) ]
+
 
 # The following functions return a vector (as a numarray)
 def unitvector(a):
