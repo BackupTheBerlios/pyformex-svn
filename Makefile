@@ -76,3 +76,6 @@ dist.stamped:
 distclean:
 	rm -rf $(PYFORMEXDIR)
 	alldirs . "rm -f *~"
+
+public: $(PYFORMEXDIR).tar.gz
+	scp README $(PYFORMEXDIR).tar.gz mecatrix.ugent.be:/home/ftp/pub/pyformex

@@ -319,7 +319,7 @@ class Formex:
 
 
     def bump1(self,dir,a,dist,func):
-        """Return a formex modified (bumped) in one direction.
+        """Return a formex with a one-dimensional bump.
 
         dir specifies the axis of the modified coordinates;
         a is the point that forces the bumping;
@@ -332,24 +332,22 @@ class Formex:
         f[:,:,dir] += func(d)*a[dir]/func(0)
         return Formex(f)
     
- 
-    def bump(dir,points,c=0.5):
-        """Return a formex modified (bumped) in one direction.
+    def bump2(self,dir,a,func):
+        """Return a formex with a two-dimensional bump.
 
         dir specifies the axis of the modified coordinates;
-        points is a list of points that force the bumping;
-        The value of dist is dependant on the bumping mode: line or point.
-        In line mode, the amount of change depends on the distance between
-        the point and the bumping point, measured along one direction (dist);
-        in point mode, dist must be a list of two axis numbers([d1,d2], and
-        the two-dimensional distance in the plane d1,d2 will be used.
+        a is the point that forces the bumping;
+        func is a function that calculates the bump intensity from distance
+        !! func(0) should be different from 0.
         """
-        for a in p:
-            d = self.f[:,:,0:2] - a[0:2]
-        d = d*d
-        d = sqrt(d[:,:,0] + d[:,:,1])
-        d = a[2]*exp(-c*d)
-        x[:,:,2] += d
+        f = copy.deepcopy(self.f)
+        dist = [0,1,2]
+        dist.remove(dir)
+        d1 = f[:,:,dist[0]] - a[dist[0]]
+        d2 = f[:,:,dist[1]] - a[dist[1]]
+        d = sqrt(d1*d1+d2*d2)
+        f[:,:,dir] += func(d)*a[dir]/func(0)
+        return Formex(f)
 
     # Compatibility functions # deprecated !
         
@@ -454,7 +452,11 @@ class Formex:
     tic = int
     def ric(f):
         return int(round(f))
-    
+
+    def globals(self):
+        return globals()
+
+    globals = classmethod(globals)
 
 
 #### Test

@@ -16,35 +16,14 @@ e = Formex([[[0,0,0],[1,0,0]]]).rosad(.5,.5).rinid(n,n,1,1)
 # Novation (Spots)
 m = 4
 h = 12
-c = 7
 r = n/m
 s = n/r
-print "s=",s
-a1 = [ [r*i,r*j,h]  for j in range(1,s) for i in range(1,s) ]
-print a1
+a = [ [r*i,r*j,h]  for j in range(1,s) for i in range(1,s) ]
 
-def nov(x,p,c=0.5):
-    from numarray import sqrt,exp # we need to import this
-    for a in p:
-        d = x[:,:,0:2] - a[0:2]
-        d = d*d
-        d = sqrt(d[:,:,0] + d[:,:,1])
-        d = a[2]*exp(-c*d)
-        x[:,:,2] += d
-
-
-
-
-f = e.formex()
-nov(f,a1,0.4) # This changes the formex inplace !
-
-# This creates already a nice picture, but the implementation in formex
-# should be somewhat more useful:
-#  - using any of the three coordinates
-#  - result in a surface acutally going through the specified indentation
-#    instead of accumulating them ; this requires to solve a system
-#    of equations first, to calculate the respective weights of the points
-  
+for p in a:
+    e = e.bump2(2,p, lambda x:exp(-0.5*x))
+    
+ 
 out = e
 draw (out)
 	

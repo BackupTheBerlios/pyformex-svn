@@ -308,7 +308,15 @@ def replay(fn,ask=False):
         ans = raw_input(line.rstrip('\n')+" -- Execute this script (y/n)? ")
         ask = ans != 'y'
     if not ask:
-        execfile(fn)
+        # We need to pass formex globals to the script
+        # This would be done automatically if we put this function
+        # in the formex.py file. But hen we need to pass other globals
+        # from this file (like draw,...)
+        # We might create a module with all operations accepted in
+        # scripts.
+        g = globals()
+        g.update(Formex.globals())
+        execfile(fn,g)
 
     
 def draw(F,camera=True,side="front"):
@@ -329,26 +337,6 @@ def exit():
     else:
         sys.exit(0)
                      
-def exampleDome():
-    replay("examples/Dome.py")
-def exampleDoubleLayer():
-    replay("examples/DoubleLayer.py")
-def exampleParabolicTower():
-    replay("examples/ParabolicTower.py") 
-def exampleGeodetic():
-    replay("examples/Geodetic.py") 
-def exampleDiamatic():
-    replay("examples/Diamatic.py") 
-def exampleScallopDome():
-    replay("examples/ScallopDome.py")
-def exampleBarrelVault():
-    replay("examples/BarrelVault.py")
-def exampleNovation():
-    replay("examples/Novation.py")
-def exampleHyparcap():
-    replay("examples/Hyparcap.py")
-    
-
 testnr=0
     
 def maketest(nr=0):
