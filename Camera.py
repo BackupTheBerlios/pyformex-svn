@@ -23,6 +23,7 @@ class Camera:
     Position (eye) : position of the camera
     Scene center (center) : the point the camera is looking at.
     Up Vector
+    Twist angle
     Viewing direction (rotx,roty,rotz)
     Lens angle (fovy)
     Aspect ratio (aspect)
@@ -34,18 +35,16 @@ class Camera:
         """Create a new camera at position (0,0,0) looking along the -z axis"""
         self.setEye(0.,0.,0.)
         self.setCenter(0.,0.,-1.)
-        self.setUpVector(0.,1.,0.)
+        self.setTwist(0.)
         self.setLens(45.,4./3.)
         self.setClip(0.1,10.)
         self.setPerspective(True)
 
     # Camera position and viewing direction
-    # The set... functions only set the according data
 
     def setEye(self,x,y,z):
         """Set the camera position"""
         self.eye = [x,y,z]
-        print "Eye = ",self.eye
 
     def setCenter(self,x,y,z):
         """Set the center of the scene.
@@ -54,27 +53,30 @@ class Camera:
         It will also define the default front and back clipping planes.
         """
         self.center = [x,y,z]
-        print "Center = ",self.center
 
-    def setUpVector(self,x,y,z):
-        """Set the up vector of the camera."""
-        self.up = [x,y,z]
-        
-##    def setAngles(self,x,y,z):
-##        """Set the camera rotation angles around x,y,z axes"""
-##        self.rotx,self.roty,self.rotz = x,y,z
+    def setTwist(self,twist):
+        """Set the twist angle of the camera."""
+        self.twist = twist
 
-##    def loadMatrix(self):
-##        """Load the camera transformation matrix"""
-##        glRotatef(-self.rotx, 1.0, 0.0, 0.0)
-##        glRotatef(-self.roty, 0.0, 1.0, 0.0)
-##        glRotatef(-self.rotz, 0.0, 0.0, 1.0)
-##        print "eye=",self.eye
-##        glTranslatef(-self.eye[0],-self.eye[1],-self.eye[2])
+    def getRelPos(self):
+        """Return the relative position of the camera"""
+        return cartesianToSpherical(diff(self.eye,self.center))
+
+    def getUpVector(self):
+        """Return the up vector of the camera.
+
+        The Up vector is computed from the tilt and twist angles"""
+        sc = self.getRelPos()
+        x,y,z = sphericalToCartesian([self.twist, sc[1], 1])
+        return [ x,z,-y ]
         
     def loadMatrix(self):
         """Load the camera transformation matrix"""
-        gluLookAt(*(self.eye + self.center +self.up))
+        print "center = ",self.center
+        print "eye = ",self.eye
+        print "twist = ",self.twist
+        print "up = ",self.getUpVector()
+        gluLookAt(*(self.eye + self.center +self.getUpVector()))
 
     def dolly(self,val):
         """Move the camera eye towards/away from the scene center.
@@ -89,8 +91,8 @@ class Camera:
         eye = pointOf(self.center,self.eye,val)
         self.setEye(*eye)
 
-    def rotate(self,val):
-        """Rotate the camera around the vedrtical axis through the center.
+    def rotate(self,val,axis=0):
+        """Rotate the camera around vert/hor axis through the center.
 
         The camera is rotated around an axis through the center point
         and parallel with the y-axis. The viewing axis of the camera
@@ -99,8 +101,9 @@ class Camera:
         A positive value rotates the camera around the pos y-axis.
         The value is specified in degrees.
         """
-        az,el,di = cartesianToSpherical(diff(self.eye,self.center))
-        eye = add(self.center,sphericalToCartesian([az+val,el,di]))
+        sc = cartesianToSpherical(diff(self.eye,self.center))
+        sc[axis] += val
+        eye = add(self.center,sphericalToCartesian(sc))
         self.setEye(*eye)
 
     def pan(self,val):
@@ -151,11 +154,7 @@ class Camera:
         pass
         
 
-        
-    # truck(left right), pedestal(up,down)
-    # tilt(up down), zoom(in,out)
-    # rotate(left,right,down,up) : with fixed camera position
-
+ 
     # Camera viewing parameters
 
     def setLens(self,fovy=None,aspect=None):
@@ -200,7 +199,6 @@ class Camera:
 	glLoadIdentity()
         if self.perspective:
             gluPerspective(self.fovy,self.aspect,self.near,self.far)
-            #glFrustum(self.left,self.right,self.top,self.bottom,self.near,self.far)
         else:
             glOrtho(self.left,self.right,self.top,self.bottom,self.near,self.far)
 	glMatrixMode(GL_MODELVIEW)     
@@ -230,9 +228,6 @@ if __name__ == "__main__":
         glColor3f (1.0, 1.0, 1.0)
         glLoadIdentity ()             # clear the matrix
         cam.loadMatrix()
-##        # viewing transformation  
-##        gluLookAt (0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
-##        glScalef (1.0, 2.0, 1.0)     # modeling transformation  
         glutWireCube (1.0)
         glFlush ()
 
@@ -255,6 +250,10 @@ if __name__ == "__main__":
             cam.rotate(5.)
         elif key == 'R':
             cam.rotate(-5.)
+        elif key == 's':
+            cam.rotate(5.,1)
+        elif key == 'S':
+            cam.rotate(-5.,1)
         elif key == 'p':
             cam.pan(5.)
         elif key == 'P':
@@ -264,13 +263,13 @@ if __name__ == "__main__":
         elif key == 'T':
             cam.tilt(-1.)
         elif key == 'h':
-            cam.move([1.,0.,0.])
+            cam.move([0.2,0.,0.])
         elif key == 'H':
-            cam.move([-1.,0.,0.])
+            cam.move([-0.2,0.,0.])
         elif key == 'v':
-            cam.move([0.,1.,0.])
+            cam.move([0.,0.2,0.])
         elif key == 'V':
-            cam.move([0.,-1.,0.])
+            cam.move([0.,-0.2,0.])
         else:
             print key
         display()
@@ -281,14 +280,14 @@ if __name__ == "__main__":
         glutInit(sys.argv)
         glutInitDisplayMode (GLUT_SINGLE | GLUT_RGB)
         glutInitWindowSize (500, 500) 
-        glutInitWindowPosition (100, 100)
+        #glutInitWindowPosition (100, 100)
         glutCreateWindow (sys.argv[0])
         init ()
         
         cam = Camera()
         cam.setEye(0.0, 0.0, 5.0)
         cam.setCenter(0.0, 0.0, 0.0)
-        cam.setUpVector(0.0, 1.0, 0.0)
+        cam.setTwist(0.0)
 
         glutDisplayFunc(display) 
         glutReshapeFunc(reshape)
