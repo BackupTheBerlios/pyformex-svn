@@ -38,6 +38,10 @@ def diff (v,w):
     """Return the difference vector v-w"""
     return [ x-y for x,y in zip(v,w) ]
 
+def distance (v,w):
+    """Return the distance between two points"""
+    return length(diff(v,w))
+
 def pointOf (v,w,pos=0.5):
     """Return the point on the line v-w defined by the relative coordinate pos.
 
@@ -85,3 +89,26 @@ def sphericalToCartesian (v) :
     lat = radians(v[1])
     return scale ([ cos(lat)*sin(long), sin(lat), cos(lat)*cos(long) ], v[2])
 
+def roll(vector,n):
+    """Roll the elements of the vector over n positions forward"""
+    return vector[n:] + vector[:n]
+
+def rotationMatrix (axis,angle):
+    """Return a rotation matrix over angle(degrees) around axis.
+
+    This is a matrix for postmultiplying a row vector."""
+    m = [ [ 0. for i in range(3) ]  for j in range(3) ]
+    i,j,k = roll(range(3),axis%3)
+    a = radians(angle)
+    c = cos(a)
+    s = sin(a)
+    m[i][i] = 1.
+    m[j][j] = c
+    m[j][k] = s
+    m[k][j] = -s
+    m[k][k] = c
+    return m
+
+def matrixMultiply (a,b):
+    """Multipy matrices a and b."""
+    return [ [ sum( [ a[i][k] * b[k][j] for k in range(len(b)) ] ) for j in range(len(b[0])) ] for i in range(len(a)) ]

@@ -1,0 +1,50 @@
+# README
+#
+# Calpy is a Finite Element program intended for stress and displacement
+# calculations in mechanics of materials and structures
+#
+# It is primarily intended as an educational tool for use in our lectures.
+# But if you find it useful for something else, please go ahead and use it.
+# If you have questions or remarks, feel free to contact the author.
+#
+# BEWARE: this is very early beta beta software, undergoing frequent changes!
+#
+
+Howto install:
+-------------
+<TODO>
+
+Howto remove:
+------------
+<TODO
+
+What you need:
+--------------
+python: www.python.org
+  I recommend version 2.2 or higher
+numarray: http://www.stsci.edu/resources/software_hardware/numarray
+  I recommend version 0.8 or higher
+<TODO>
+
+
+Why:
+---
+<TODO>
+
+Why Python:
+----------
+Because it is simply the quickest to learn and most powerful scripting language I know (and that I like to program with). More on www.python.org
+
+
+ToDo:
+----
+A LOT!
+
+But this is a list of things we have to do before we go public:
+
+- introduce all (or most) of the formian functions
+- provide basic documentation
+- make a clean GUI
+- provide output facilities (text and graphics)
+- make a formian to pyformex translator
+

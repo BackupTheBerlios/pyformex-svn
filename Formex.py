@@ -36,7 +36,7 @@ class Formex:
         """Return the plexitude of the Formex
 
         The plexitude is the number of number of nodes in the cantle.
-        2 = bar, 3 = triangle, 4= qudrilateral, etc.
+        2 = bar, 3 = triangle, 4= quadrilateral, etc.
         """
         return self.f.shape[1]
 
@@ -168,12 +168,7 @@ class Formex:
         return Formex(f)
 
     def translate(self,dist):
-        """Returns a copy translated over distance dist.
-
-        It is acceptable to specify a dist of grade 3 for a formex of grade2.
-        Only the first two values will be used"""
-        if self.grade() == 2:
-            dist = dist[:2]
+        """Returns a copy translated over translation vector."""
         return Formex(self.f + dist)
 
     def rotate(self,angle,axis=2):
@@ -183,8 +178,6 @@ class Formex:
 
     def scale(self,scale):
         """Returns a copy scaled with scale[i] in direction i"""
-        if self.grade() == 2:
-            scale = scale[:2]
         return Formex(self.f*scale)
 
     def reflect(self,dir,pos):
@@ -277,7 +270,7 @@ class Formex:
         return self.concatenate(P)
 
     def bb(self,b1,b2):
-        return self.scale([b1,b2,0])
+        return self.scale([b1,b2,1.])
 
     def bp(self,b1,b2):
         f = copy.deepcopy(self.f)
@@ -298,26 +291,28 @@ class Formex:
         f[:,:,2] = r*sin(t)
         return Formex(f)
     
-def test():
-    print "This is a test of formex algebra"
-    F = Formex([[[1,0],[0,1]],[[0,1],[1,2]]])
-    print "F =",F
-    F1 = F.tran(1,6)
-    print "F1 =",F1
-    F2 = F.ref(1,2)
-    print "F2 =",F2
-    F3 = F.ref(1,1.5).tran(2,2)
-    print "F3 =",F3
-    H = F.rin(1,4,2)
-    print "H =",H
-    R = F.lam(1,1)
-    print "R =",R
-    G = F.lam(1,1).lam(2,1).rin(1,10,2).rin(2,6,2)
-    print "G =",G
 
 
 #### Test
 if __name__ == "__main__":
+    
+    def test():
+        print "This is a test of formex algebra"
+        F = Formex([[[1,0],[0,1]],[[0,1],[1,2]]])
+        print "F =",F
+        F1 = F.tran(1,6)
+        print "F1 =",F1
+        F2 = F.ref(1,2)
+        print "F2 =",F2
+        F3 = F.ref(1,1.5).tran(2,2)
+        print "F3 =",F3
+        H = F.rin(1,4,2)
+        print "H =",H
+        R = F.lam(1,1)
+        print "R =",R
+        G = F.lam(1,1).lam(2,1).rin(1,10,2).rin(2,6,2)
+        print "G =",G
+        
     test()
 
 #### End

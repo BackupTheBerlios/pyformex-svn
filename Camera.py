@@ -23,60 +23,78 @@ class Camera:
     Position (eye) : position of the camera
     Scene center (center) : the point the camera is looking at.
     Up Vector
-    Twist angle
     Viewing direction (rotx,roty,rotz)
+    
+    For enabling continuous rotations, it is essential that the camera angles
+    are stored as such, and not be calculated form the camera position and
+    center point, because the transformation from cartesian to spherical
+    coordinates is not unique.
+    Therefore we store the camera as follows:
+        center : [ x,y,z ] : the reference point of the camera : this is always
+                a point on the viewing axis. 
+        pos : [ long,lat,dist ] : relative position in spherical coordinates
+                of the camera with respect to the center point. 
+        twist : rotation angles around the camera's viewing axis
+   
     Lens angle (fovy)
     Aspect ratio (aspect)
     Clip (front/back)
     Perspective/Orthogonal
     """
 
-    def __init__(self):
-        """Create a new camera at position (0,0,0) looking along the -z axis"""
-        self.setEye(0.,0.,0.)
-        self.setCenter(0.,0.,-1.)
-        self.setTwist(0.)
+    def __init__(self,center=[0.,0.,0.],position=[0.,0.,1.],twist=0.):
+        """Create a new camera at position (0,0,1) looking along the -z axis"""
+        self.setCenter(*center)
+        self.setPos(*position)
+        self.setTwist(twist)
         self.setLens(45.,4./3.)
         self.setClip(0.1,10.)
         self.setPerspective(True)
 
     # Camera position and viewing direction
 
-    def setEye(self,x,y,z):
-        """Set the camera position"""
-        self.eye = [x,y,z]
-
     def setCenter(self,x,y,z):
-        """Set the center of the scene.
+        """Set thecenter of the camera in cartesian coordinates."""
+        self.ctr = [x,y,z]
 
-        This defines the direction of the camera axis and the focus distance.
-        It will also define the default front and back clipping planes.
-        """
-        self.center = [x,y,z]
+    def setPos(self,x,y,z):
+        self.pos = [x % 360,y % 360,z]
 
-    def setTwist(self,twist):
-        """Set the twist angle of the camera."""
-        self.twist = twist
-
-    def getRelPos(self):
-        """Return the relative position of the camera"""
-        return cartesianToSpherical(diff(self.eye,self.center))
-
-    def getUpVector(self):
-        """Return the up vector of the camera.
-
-        The Up vector is computed from the tilt and twist angles"""
-        sc = self.getRelPos()
-        x,y,z = sphericalToCartesian([self.twist, sc[1], 1])
-        return [ x,z,-y ]
+    def setTwist(self,t):
+        self.twist = t % 360
         
+    def getEye(self):
+        """Return the cartesian coordinates of the camera (eye)."""
+        return add(self.ctr,sphericalToCartesian(self.pos))
+        
+    def getAngles(self):
+        """Return the three rotation angles of the camera."""
+        return [ -self.pos[1], self.pos[0], self.twist ]
+
+    def setEye(self,lat,long,dist):
+        """Set the position of the camera in relative spherical coordinates.
+
+        We store the position of the camera in spherical coordinates,
+        relative to the center. This allows for easy camera movements.
+        Latitude (azimuth) and longitude (elevation) are in degrees.
+        lat is the rotation around the y-axis, (0 is z-axis)
+        long is the rotation around the (rotated) x-axis, (0 is x-z plane)
+        dist is the distance from the center.
+        """
+        self.eye = [lat,long,dist]
+
     def loadMatrix(self):
         """Load the camera transformation matrix"""
-        print "center = ",self.center
-        print "eye = ",self.eye
-        print "twist = ",self.twist
-        print "up = ",self.getUpVector()
-        gluLookAt(*(self.eye + self.center +self.getUpVector()))
+        print "Center = ",self.ctr
+        print "Position = ",self.pos
+        print "Eye = ",self.getEye()
+        print "Angles = ",self.getAngles()
+        rot = self.getAngles()
+        eye = self.getEye()
+        glRotatef(-rot[2], 0.0, 0.0, 1.0)
+        glRotatef(-rot[0], 1.0, 0.0, 0.0)
+        glRotatef(-rot[1], 0.0, 1.0, 0.0)
+        glTranslatef(-eye[0],-eye[1],-eye[2])
 
     def dolly(self,val):
         """Move the camera eye towards/away from the scene center.
@@ -88,11 +106,10 @@ class Camera:
         The front and back clipping planes may need adjustment after
         a dolly operation.
         """
-        eye = pointOf(self.center,self.eye,val)
-        self.setEye(*eye)
+        self.pos[2] *= val
 
     def rotate(self,val,axis=0):
-        """Rotate the camera around vert/hor axis through the center.
+        """Rotate the camera around axis through the center.
 
         The camera is rotated around an axis through the center point
         and parallel with the y-axis. The viewing axis of the camera
@@ -101,48 +118,49 @@ class Camera:
         A positive value rotates the camera around the pos y-axis.
         The value is specified in degrees.
         """
-        sc = cartesianToSpherical(diff(self.eye,self.center))
-        sc[axis] += val
-        eye = add(self.center,sphericalToCartesian(sc))
-        self.setEye(*eye)
+        if axis==0 or axis ==1:
+            self.pos[axis] = (self.pos[axis] + val) % 360
+        elif axis==2:
+            self.twist = (self.twist + val) % 360
 
-    def pan(self,val):
-        """Rotate the camera right/left around its own vertical axis.
+    def pan(self,val,axis=0):
+        """Rotate the camera around axis through its eye. 
 
-        The camera is rotated around an axis through the eye point
-        and parallel with the y-axis. The viewing axis of the camera
-        will move away from the center. This has the effect of panning.
-        A positive value rotates the camera around the pos y-axis.
-        The value is specified in degrees.
+        The camera is rotated around an axis through the eye point.
+        For axes 0 and 1, this will move the center, creating a panning
+        effect. The default axis is parallel to the y-axis, resulting in
+        horizontal panning. For vertical panning (axis=1) a convenience
+        alias tilt is created.
+        For axis = 2 the operation is equivalent to the rotate operation.
         """
-        az,el,di = cartesianToSpherical(diff(self.center,self.eye))
-        center = add(self.eye,sphericalToCartesian([az+val,el,di]))
-        self.setCenter(*center)
+        if axis==0 or axis ==1:
+            eye = self.getEye()
+            self.pos[axis] = (self.pos[axis] + val) % 360
+            center = diff(eye,sphericalToCartesian(self.pos))
+            self.setCenter(*center)
+        elif axis==2:
+            self.twist = (self.twist + val) % 360
 
     def tilt(self,val):
         """Rotate the camera up/down around its own horizontal axis.
 
-        The camera is rotated around an axis through the eye point
-        and parallel with the y-axis and perpendicular to the viewing axis.
-        This has the effect of a vertical pan.
+        The camera is rotated around and perpendicular to the plane of the
+        y-axis and the viewing axis. This has the effect of a vertical pan.
         A positive value tilts the camera up, shifting the scene down.
         The value is specified in degrees.
         """
-        az,el,di = cartesianToSpherical(diff(self.center,self.eye))
-        center = add(self.eye,sphericalToCartesian([az,el+val,di]))
-        self.setCenter(*center)
+        self.pan(val,1)
 
     def move(self,translation):
         """Move the camera over translation vector in global coordinates.
 
-        This has the effect moving the scene in opposite direction.
+        The center of the camera is moved over the specified translation
+        vector. This has the effect of moving the scene in opposite direction.
         """
-        eye = add(self.eye,translation)
-        center = add(self.center,translation)
-        self.setEye(*eye)
+        center = add(self.ctr,translation)
         self.setCenter(*center)
 
-    def truck(self,val):
+    def truck(self,translation):
         """Move the camera translation vector in local coordinates.
 
         This has the effect moving the scene in opposite direction.
@@ -150,11 +168,19 @@ class Camera:
           first  coordinate : truck right,
           second coordinate : pedestal up,
           third  coordinate : dolly out.
-        """ 
-        pass
+        """
+        eye = self.getEye()
+        ang = self.getAngles()
+        tr = [translation]
+        print "orig:",tr
+        for i in [1,0,2]:
+            r = rotationMatrix(i,ang[i])
+            print r
+            tr = matrixMultiply(tr, r)
+            print "na trf ",i,tr
+        self.move(tr[0])
         
 
- 
     # Camera viewing parameters
 
     def setLens(self,fovy=None,aspect=None):
@@ -166,14 +192,6 @@ class Camera:
         """
         if fovy: self.fovy = fovy
         if aspect: self.aspect = aspect
-
-##    def setFrustum(self):
-##        """Set the frustum parameters from camera parameters"""
-##        if self.near and self.fovy and self.aspect:
-##            self.top = self.near * math.tan(math.radians(self.fovy/2))
-##            self.bottom = -self.top
-##            self.right = self.top*self.aspect
-##            self.left = self.bottom*self.aspect
         
     def setClip(self,near,far):
         """Set the near and far clipping planes"""
@@ -193,7 +211,7 @@ class Camera:
         """Set perspective on or off"""
         self.perspective = on
 
-    def setProjection(self):
+    def loadProjection(self):
         """Load the projection/perspective matrix."""
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
@@ -203,15 +221,17 @@ class Camera:
             glOrtho(self.left,self.right,self.top,self.bottom,self.near,self.far)
 	glMatrixMode(GL_MODELVIEW)     
 
-    def zoom(self,val=2):
+    def zoom(self,val=0.5):
         """Zoom in/out by shrinking/enlarging the camera view angle.
 
         The zoom factor is relative to the current setting.
         Use setFovy() to specify an absolute setting.
         """
         if val>0:
-            self.setFovy(self.fovy/val)
-        self.setClip(dist,2*dist+size[2])
+            self.fovy *= val
+        #self.setClip(dist,2*dist+size[2])
+        print "Lens = ",self.fovy,self.aspect
+        self.loadProjection()
 
 
 if __name__ == "__main__":
@@ -254,14 +274,18 @@ if __name__ == "__main__":
             cam.rotate(5.,1)
         elif key == 'S':
             cam.rotate(-5.,1)
+        elif key == 'w':
+            cam.rotate(5.,2)
+        elif key == 'W':
+            cam.rotate(-5.,2)
         elif key == 'p':
             cam.pan(5.)
         elif key == 'P':
             cam.pan(-5.)
         elif key == 't':
-            cam.tilt(1.)
+            cam.tilt(5.)
         elif key == 'T':
-            cam.tilt(-1.)
+            cam.tilt(-5.)
         elif key == 'h':
             cam.move([0.2,0.,0.])
         elif key == 'H':
@@ -270,6 +294,29 @@ if __name__ == "__main__":
             cam.move([0.,0.2,0.])
         elif key == 'V':
             cam.move([0.,-0.2,0.])
+        elif key == '+':
+            cam.zoom(0.8)
+        elif key == '-':
+            cam.zoom(1.25)
+        elif key == 'x':
+            cam.truck([0.5,0.,0.])
+        elif key == 'X':
+            cam.truck([-0.5,0.,0.])
+        elif key == 'y':
+            cam.truck([0.,0.5,0.])
+        elif key == 'Y':
+            cam.truck([0.,-0.5,0.])
+        elif key == 'z':
+            cam.truck([0.,0.,0.5])
+        elif key == 'Z':
+            cam.truck([0.,0.,-0.5])
+        elif key == '=':
+            cam.setCenter(0.,0.,0.)
+            cam.setPos(0.,0.,5.)
+            cam.setTwist(0.)
+        elif key == 'o':
+            cam.setPerspective(not cam.perspective)
+            cam.loadProjection
         else:
             print key
         display()
@@ -284,10 +331,8 @@ if __name__ == "__main__":
         glutCreateWindow (sys.argv[0])
         init ()
         
-        cam = Camera()
-        cam.setEye(0.0, 0.0, 5.0)
-        cam.setCenter(0.0, 0.0, 0.0)
-        cam.setTwist(0.0)
+        cam = Camera(center=[0.,0.,0.],position=[0.,0.,5.])
+        cam.setLens(45.,1.)
 
         glutDisplayFunc(display) 
         glutReshapeFunc(reshape)
