@@ -147,7 +147,7 @@ def insertExamplesMenu():
     global dirname,examples
     dir = os.path.join(dirname,"examples")
     if os.path.isdir(dir):
-        examples = filter(lambda s:s[-3:]==".py",os.listdir(dir))
+        examples = filter(lambda s:s[-3:]==".py" and s[0]!='.',os.listdir(dir))
     vm = ("Popup","&Examples",[
         ("VAction","&%s"%os.path.splitext(t)[0],("runExample",i)) for i,t in enumerate(examples)
         ])
@@ -316,6 +316,7 @@ def replay(fn,ask=False):
         # scripts.
         g = globals()
         g.update(Formex.globals())
+        status(fn)
         execfile(fn,g)
 
     
@@ -364,16 +365,20 @@ def maketest(nr=0):
         G = E.bs(1,30,5)
         out=G
     return out
-    
+
+def status(s):
+    """Display a message in the status line"""
+    global statusbar
+    statusbar.message(s)
 
 def GUI():
-    global canvas,option
+    global canvas,statusbar, options
     w = QMainWindow()
     w.setCaption(Version)
     w.resize(640,480)
     # add widgets to the main window
-    s = w.statusBar()
-    s.message(Version+" (c) B. Verhegghe")
+    statusbar = w.statusBar()
+    statusbar.message(Version+" (c) B. Verhegghe")
     m = w.menuBar()
     insertViewMenu()
     insertExamplesMenu()

@@ -28,15 +28,55 @@ def tand(arg):
     """Return the sin of an angle in degrees."""
     return tan(radians(arg))
 
+def inside(p,mi,ma):
+    """Return true if point p is inside bbox defined by points mi and ma"""
+    return p[0] >= mi[0] and p[1] >= mi[1] and p[2] >= mi[2] and \
+           p[0] <= ma[0] and p[1] <= ma[1] and p[2] <= ma[2]
+
+def equal(p1,p2,tol=1.e-6):
+    """Return true if two points are considered equal within tolerance."""
+    return inside([ p1[i]-p2[i] for i in range(3) ],
+                  [ -tol for i in range(3) ], [ +tol for i in range(3) ] )
+
 # Update 02 Jul 2004
 # For simplicity's sake, we work now only with 3-D coordinates.
-# Formex operations in 2-D are not so very useful anyway.
-# The user can continue to create formices in a 2-D space,
+# The user can create formices in a 2-D space,
 # but internally they will be stored with 3 coordinates, adding a z-value 0.
-# A special operator formex2D lets you extrac a 2-D coordinate list
+# A special operator formex2D lets you extract a 2-D coordinate list
+
+# About Formex/Formian newspeak:
+# The author of formex/formian had an incredible preference for newspeak:
+# for every concept or function, a new name was invented. While this may
+# give formex/formian the aspect of a sophisticated scientific background,
+# it works rather distracting and ennoying for people that are already
+# familiar with the basic ideas of 3D geometry, and are used to using the
+# standardized terms.
+# In our pyformex we will try to use as much as possible the normal
+# terminology, while referring to the formian newspeak in parentheses
+# and preceded by a 'F:'. Similar concepts in Finite Element terminology
+# are marked with 'FE:'.
 
 class Formex:
-    """A formex is a numarray of order 3. An element is a uniple. A row along the axis 2 is a signet. A plane along axes 2 and 1 is a cantle.
+    """A Formex is a numarray of order 3 (axes 0,1,2) and type Float.
+    A scalar element represents a coordinate (F:uniple).
+
+    A row along the axis 2 is a set of coordinates and represents a point
+    (node, vertex, F: signet).
+    For simplicity's sake, the current implementation only deals with points
+    in a 3-dimensional space. This means that the length of axis 2 is always 3.
+    The user can create formices (plural of formex) in a 2-D space, but
+    internally these will be stored with 3 coordinates, by adding a third
+    value 0. All operations work with 3-D coordinate sets. However, a method
+    exists to extract only a limited set of coordinates from the results,
+    premitting to return to a 2-D environment
+
+    A plane along the axes 2 and 1 is a set of points (F: cantle). This can be
+    thought of as a geometrical shape (2 points form a line segment, 3 points
+    make a triangle, ...) or as an element in FE terms. But it reaaly is up to
+    the user as to how this set of points is to be interpreted.
+    The number of nodes of an element is its
+
+    Finally, the whole Formex represents a set of such elements
 
     """
 
@@ -72,9 +112,18 @@ class Formex:
         """
         return self.f.shape[2]
 
-    def formex(self):
+    def data(self):
         """Return the formex as a numarray"""
         return self.f
+    def x(self):
+        """Return the x-plane (can be modified)"""
+        return self.f[:,:,0]
+    def y(self):
+        """Return the x-plane (can be modified)"""
+        return self.f[:,:,1]
+    def z(self):
+        """Return the x-plane (can be modified)"""
+        return self.f[:,:,2]
 
     def cantle(self,i):
         """Return cantle i of the formex"""
@@ -199,6 +248,10 @@ class Formex:
             f[k,k] = c
         return f
 
+
+    # Common tranformations
+        
+
     def translate(self,vector,distance=None):
         """Returns a copy translated over translation vector.
 
@@ -290,18 +343,28 @@ class Formex:
               for i in range(n2) ]
         return self.concatenate(P)
 
-    def cylindrical(self,b1,b2,b3):
-        """Converts from cylindrical to cartesian after scaling"""
-        f = copy.deepcopy(self.f)
-        r = b1*f[:,:,0]
-        theta = math.radians(b2)*f[:,:,1]
+    def cylindrical(self,dir=[0,1,2],scale=[1.,1.,1.]):
+        """Converts from cylindrical to cartesian after scaling.
+
+        dir specifies which coordinates are interpreted as resp.
+        distance(r), longitude(theta) and height(z).
+        scale will scale the coordinate values prior to the transformation
+        """
+        f = zeros(self.f.shape)
+        r = scale[0] * self.f[:,:,dir[0]]
+        theta = math.radians(scale[1]) * self.f[:,:,dir[1]]
         f[:,:,0] = r*cos(theta)
         f[:,:,1] = r*sin(theta)
-        f[:,:,2] *= b3
+        f[:,:,2] = b3
         return Formex(f)
     
     def spherical(self,b1,b2,b3):
-        """Converts from spherical to cartesian after scaling"""
+        """Converts from spherical to cartesian after scaling.
+
+        The first coordinate is the distance,
+        the second is the colatitude (elevation measured from 0 in the zenit,
+        the third is the longitude
+        """
         f = copy.deepcopy(self.f)
         r = b1*f[:,:,0]
         s = math.radians(b2)*f[:,:,1]
@@ -318,7 +381,7 @@ class Formex:
         return Formex(self.f)
 
 
-    def bump1(self,dir,a,dist,func):
+    def bump1(self,dir,a,func,dist):
         """Return a formex with a one-dimensional bump.
 
         dir specifies the axis of the modified coordinates;
@@ -348,6 +411,102 @@ class Formex:
         d = sqrt(d1*d1+d2*d2)
         f[:,:,dir] += func(d)*a[dir]/func(0)
         return Formex(f)
+
+    
+    # This is a generalization of both the bump1 and bump2 methods.
+    # If it proves to be useful, it might replace them one day
+
+    # An interesting modification might be to have a point for definiing
+    # the distance and a point for defining the intensity (3-D) of the
+    # modification
+    def bump(self,dir,a,func,dist=None):
+        """Return a formex with a bump.
+
+        A bump is a modification of a set of coordinates by a non-matching
+        point. It can produce various effects, but one of the most common
+        uses is to force a surface to be indented by some point.
+        
+        dir specifies the axis of the modified coordinates;
+        a is the point that forces the bumping;
+        func is a function that calculates the bump intensity from distance
+        (!! func(0) should be different from 0)
+        distdir is the direction in which the distance is measured : this can
+        be one of the axes, or a list of one or more axes.
+        If only 1 axis is specified, the effect is like function bump1
+        If 2 axes are specified, the effect is like bump2
+        This function can take 3 axes however.
+        Default value is the set of 3 axes minus the direction of modification.
+        This function is then equivalent to bump2.
+        """
+        f = copy.deepcopy(self.f)
+        if dist == None:
+            dist = [0,1,2]
+            dist.remove(dir)
+        try:
+            l = len(dist)
+        except TypeError:
+            l = 1
+            dist = [dist]
+        d = f[:,:,dist[0]] - a[dist[0]]
+        if l==1:
+            d = abs(d)
+        else:
+            d = d*d
+            for i in dist[1:]:
+                d1 = f[:,:,i] - a[i]
+                d += d1*d1
+            d = sqrt(d)
+        #print d
+        #print a[dir]/func(0)
+        f[:,:,dir] += func(d)*a[dir]/func(0)
+        return Formex(f)
+
+    def map(self,func):
+        """Return a Formex where point is mapped by a 3-D function.
+
+        This is one of the versatile mapping functions.
+        func is a numerical function which takes three arguments and produces
+        a list of three output values. The coordinates [x,y,z] will be
+        replaced by func(x,y,z).
+        The function must be applicable on numarrays, so it should
+        only include numerical operations and functions understood by the
+        numarray module.
+        This method is one of several mapping methods. See also map1 and mapd.
+        Example: E.map(lambda x,y,z: [2*x,3*y,4*z])
+        is equivalent with E.scale([2,3,4])
+        """
+        f = zeros(self.f.shape)
+        f[:,:,0],f[:,:,1],f[:,:,2] = func(self.f[:,:,0],self.f[:,:,1],self.f[:,:,2])
+        return Formex(f)
+
+    def replace(self,i,j):
+        """Replace the coordinates along the axes i by those along j.
+
+        i and j are lists of axis numbers.
+        replace ([0,1,2],[1,2,0]) will roll the axes by 1.
+        replace ([0,1],[1,0]) will swap axes 0 and 1.
+        """
+        f = copy.deepcopy(self.f.shape)
+        for k in range(len(i)):
+            f[:,:,i[i]],f[:,:,1],f[:,:,2] = self.f[:,:,0],self.f[:,:,1],self.f[:,        
+
+    def map1(self,func):
+        """Return a Formex where each coordinate is mapped by a 1-D function.
+
+        This is one of the versatile mapping functions.
+        func is a list of three numerical functions [f,g,h], each of which
+        takes one argument and produces one value. The coordinates [x,y,z]
+        will be replaced by [ f(x), g(y), h(z) ].
+        The functions f,g,h must be applicable on numarrays, so they should
+        only include numerical operations and functions understood by the
+        numarray module.
+        This method is one of several mapping methods. See also map and mapd.
+        """
+        f = zeros(self.f.shape)
+        for i in range(3):
+            f[:,:,i] = func[i](self.f[:,:,i])
+        return Formex(f)
+        
 
     # Compatibility functions # deprecated !
         

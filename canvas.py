@@ -56,7 +56,7 @@ class FormexActor(Formex):
     """An OpenGL actor which is a Formex"""
 
     def __init__(self,F):
-        Formex.__init__(self,F.formex())
+        Formex.__init__(self,F.data())
         
     def display(self,wireframe=True):
         """Draw a formex of line elements.
@@ -65,12 +65,12 @@ class FormexActor(Formex):
         nnod = self.plexitude()
         if nnod == 2:
             glBegin(GL_LINES)
-            for el in self.formex():
+            for el in self.data():
                 for nod in el:
                     glVertex3f(*nod)
             glEnd()
         elif wireframe:
-            for el in self.formex():
+            for el in self.data():
                 glBegin(GL_LINE_LOOP)
                 for nod in el:
                     glVertex3f(*nod)
@@ -78,18 +78,18 @@ class FormexActor(Formex):
         elif nnod == 3:
             print "Triangles"
             glBegin(GL_TRIANGLES)
-            for el in self.formex():
+            for el in self.data():
                 for nod in el:
                     glVertex3f(*nod)
             glEnd()
         elif nnod == 4:
             glBegin(GL_QUADS)
-            for el in self.formex():
+            for el in self.data():
                 for nod in el:
                     glVertex3f(*nod)
             glEnd()
         else:
-            for el in self.formex():
+            for el in self.data():
                 glBegin(GL_POLYGON)
                 for nod in el:
                     glVertex3f(*nod)

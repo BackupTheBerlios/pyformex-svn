@@ -14,8 +14,8 @@ a1 = Formex([[[0,0,0],[0,1,0]]]).rinid(m+1,n,1,1) + Formex([[[0,0,0],[1,0,0]]]).
 p = a1.center()
 p[2] = 24
 f = lambda x:1-(x/18)**2/2
-a2 = a1.bump1(2,p,1,f)
+a2 = a1.bump(2,p,f,1)
 p[2] = 4
-a3 = a2.bump1(2,p,0,lambda x:1-(x/6)**2/2)
+a3 = a2.bump(2,p,lambda x:1-(x/6)**2/2,0)
 out = a3.rin(1,5,12)
 draw(out)
