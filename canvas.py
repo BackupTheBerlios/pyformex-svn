@@ -11,10 +11,9 @@ import sys,math
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from Colors import *
-from Formex import *
-from Geometry import *
-from Camera import *
+from colors import *
+from formex import *
+from camera import *
 import vector
 
 class FormexActor(Formex):

@@ -4,9 +4,8 @@
 Version="Forming 0.1"
 import sys,time
 
-from Formex import *
-from Menu import *
-from Canvas import *
+from formex import *
+from canvas import *
 
        
 def AddMenuItems(menu, items=[]):

@@ -161,15 +161,25 @@ class Formex:
             f[k,k] = c
         return f
 
-    def translate1(self,dir,dist):
-        """Returns a copy translated in direction dir over distance dist"""
+    def translate1(self,dir,distance):
+        """Returns a copy translated in direction dir over distance dist.
+
+        The direction is specified by the axis number (0,1,2).
+        """
         f = self.f.copy()
-        f[:,:,dir] += dist
+        f[:,:,dir] += distance
         return Formex(f)
 
-    def translate(self,dist):
-        """Returns a copy translated over translation vector."""
-        return Formex(self.f + dist)
+    def translate(self,vector,distance=None):
+        """Returns a copy translated over translation vector.
+
+        If no distance is given, translation is over the specified vector.
+        If a distance is given, translation is over the specified distance
+        in the direction of the vector"""
+        if distance:
+            return Formex(self.f + scale(unitvector(vector),distance))
+        else:
+            return Formex(self.f + vector)
 
     def rotate(self,angle,axis=2):
         """Returns a copy rotated over distance dist of matching grade."""
@@ -249,7 +259,18 @@ class Formex:
         return self.translate([t1,0,t2])
     def tranit(self,t1,t2):
         return self.translate([0,t1,t2])
-    
+    def tranix(self,t1,t2,t3):
+        return self.translate([t1,t2,t3])
+
+    def tranad(self,a1,a2,b1,b2,t=None):
+        return self.translate([b1-a1,b2-a2,0.],t)
+    def tranas(self,a1,a2,b1,b2,t=None):
+        return self.translate([b1-a1,0.,b2-a2],t)
+    def tranat(self,a1,a2,b1,b2,t=None):
+        return self.translate([0.,b1-a1,b2-a2],t)
+    def tranax(self,a1,a2,a3,b1,b2,b3,t=None):
+        return self.translate([b1-a1,b2-a2,b3-a3],t)
+   
     def rinid(self,n1,n2,t1,t2):
         return self.rin(1,n1,t1).rin(2,n2,t2)
     def rinis(self,n1,n2,t1,t2):

@@ -1,0 +1,14 @@
+# History
+##
+## This file is part of calpy 0.1 Release Fri Mar 12 15:34:55 2004
+## calpy is a Finite Element program written in Python
+## (c) 1997,2003 Benedict Verhegghe (email: benedict.verhegghe@ugent.be)
+## Distributed under the General Public License, see file COPYING for details
+##
+#
+
+2004-06-29 : Quickly hacked together the Formex functionality
+2004-06-30 : Added Canvas and simple Menu (stripped from other project)
+2004-07-02 : Created a Subversion repository
+2004-07-06 : Created separate Camera class, needed for other project(s) too
+2004-07-07 : Added README, History, COPYING, Makefile, Stamp
