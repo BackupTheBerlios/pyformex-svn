@@ -241,43 +241,45 @@ class Formex:
 #   Return information about a Formex
 #
     def nelems(self):
+        """Return the number of elements in the formex."""
         return self.f.shape[0]
-    def nnodes(self):
-        return self.f.shape[0]*self.f.shape[1]
+    
     def nnodel(self):
+        """Return the number of nodes per element.
+
+        Examples:
+        1: unconnected nodes,
+        2: straight line elements,
+        3: triangles or quadratic line elements,
+        4: tetraeders or quadrilaterals or cubic line elements.
+        """
         return self.f.shape[1]
+    
+    def ndim(self):
+        """Return the number of dimensions.
+
+        This is the number of coordinates for each node. In the
+        current implementation this is always 3, though you can
+        define 2D Formices by given only two coordinates: the third
+        will automatically be set to zero.
+        """
+        return self.f.shape[2]
+    
+    def nnodes(self):
+        """Return the number of nodes in the formex.
+
+        This is the product of the number of elements in the formex
+        with the number of nodes per element.
+        """
+        return self.f.shape[0]*self.f.shape[1]
     
     def shape(self):
         """Return the shape of the Formex.
 
         The shape of a Formex is the shape of its data array,
-        i.e. a tuple (order, plexitude, grade)
+        i.e. a tuple (nelems, nnodel, ndim).
         """
         return self.f.shape
-
-    def order(self):
-        """Return the order of the Formex
-
-        The order is the number of elements in the Formex.
-        """
-        return self.f.shape[0]
-
-    def plexitude(self):
-        """Return the plexitude of the Formex
-
-        The plexitude is the number of number of nodes in each cantle.
-        1 = node, 2 = bar, 3 = triangle, 4= quadrilateral, etc.
-        """
-        return self.f.shape[1]
-
-    def grade(self):
-        """Return the grade of the Formex.
-
-        The grade is the number of dimensions of the signet.
-        2 = 2D, 3 = 3D.
-        This will always return 3 in the current implementation.
-        """
-        return self.f.shape[2]
 
     def data(self):
         """Return the Formex as a numarray"""
@@ -714,12 +716,23 @@ class Formex:
             f[:,i,:] = resize(Flist[i].f[k:k+n,j,:],(n,3))
         return Formex(f)
     connect = classmethod(connect)
-    
 
 ##############################################################################
 #
-#   Transformations that preserve the topology (but change coordinates)
+# !! IMPORTANT:
 #
+#   The following transformations now operate on the Formex itself.
+#   Thus F.op() will change the Formex F. No need anymore to write F = F.op().
+#   The transformations return the formex self, so you can still
+#   concatenate operations:
+#   F.op1().op2().op(3) will perform the operations in order.
+#   Of course this means that the original FOrmices get lost. If you need
+#   to keep some Formex available, you have to make a copy yourself:
+#   G = F.copy()
+#
+##############################################################################
+#
+#   Transformations that preserve the topology (but change coordinates)
 #
 #   A. Affine transformations
 #
@@ -732,76 +745,75 @@ class Formex:
 #      Affine
 #
     def scale(self,scale):
-        """Returns a copy scaled with scale[i] in direction i.
+        """Scale Formex with scale[i] in direction i.
 
         The scale should be a list of 3 numbers, or a single number.
         In the latter case, the scaling is homothetic."""
-        #self.f = self.f*scale
-        #return self
-        return Formex(self.f*scale,self.p)
+        self.f *= scale
+        return self
 
     def translate(self,vector,distance=None):
-        """Returns a copy translated over distance in direction of vector.
+        """Translate Formex over distance in direction of vector.
 
         If no distance is given, translation is over the specified vector.
         If a distance is given, translation is over the specified distance
         in the direction of the vector."""
         if distance:
-            return Formex(self.f + scale(unitvector(vector),distance),self.p)
+            self.f += scale(unitvector(vector),distance)
         else:
-            return Formex(self.f + vector,self.p)
+            self.f += vector
+        return self
 
     # This could be replaced by a call to translate(), but it is cheaper
     # because we operate on one third of the coordinates only
     def translate1(self,dir,distance):
-        """Returns a copy translated in direction dir over distance dist.
+        """Translate Formex in direction dir over distance dist.
 
         The direction is specified by the axis number (0,1,2).
         """
-        f = self.f.copy()
-        f[:,:,dir] += distance
-        return Formex(f,self.p)
+        self.f[:,:,dir] += distance
+        return self
 
     def rotate(self,angle,axis=2):
-        """Returns a copy rotated over angle around coordinate axis."""
+        """Rotate Formex over angle around coordinate axis."""
         m = rotationMatrix(angle,axis)
-        return Formex(matrixmultiply(self.f,m),self.p)
+        self.f = matrixmultiply(self.f,m)
+        return self
 
     # This could be made the same function as rotate, but differentiated
     # by means of the value of the second argument
+    # Or should we just implement rotations around axes // with the global?
     def rotateAround(self,vector,angle):
-        """Returns a copy rotated over angle around vector."""
+        """Rotate Formex over angle around vector."""
         print "rotateAround has not been implemented yet!"
         return self
 
     def shear(self,dir,dir1,skew):
-        """Returns a copy skewed in the direction dir of plane (dir,dir1).
+        """Skew Formex in the direction dir of plane (dir,dir1).
 
         The coordinate dir is replaced with (dir + skew * dir1).
         """
-        f = self.f.copy()
-        f[:,:,dir] += skew * f[:,:,dir1]
-        return Formex(f,self.p)
+        self.f[:,:,dir] += skew * self.f[:,:,dir1]
+        return self
 
     def reflect(self,dir,pos=0):
-        """Returns a Formex mirrored in direction dir against plane at pos.
+        """Mirror Formex in direction dir against plane at pos.
 
         Default position of the plane is through the origin.
         """
-        f = self.f.copy()
-        f[:,:,dir] = 2*pos - f[:,:,dir]
-        return Formex(f,self.p)
+        self.f[:,:,dir] = 2*pos - self.f[:,:,dir]
+        return self
 
     def affine(self,mat,vec=None):
-        """Returns a general affine transform of the Formex.
+        """Performs a general affine transformation on the Formex.
 
-        The returned Formex has coordinates given by mat * xorig + vec,
+        The new coordinates are given by mat * xorig + vec,
         where mat is a 3x3 matrix and vec a length 3 list.
         """
-        f = matrixmultiply(self.f,m)
+        self.f = matrixmultiply(self.f,m)
         if not vec==None:
-            f += vec
-        return Formex(f,self.p)
+            self.f += vec
+        return self
 #
 #
 #   B. Non-Affine transformations
@@ -884,7 +896,7 @@ class Formex:
         return [ longitude, latitude, distance ]
 
     def bump1(self,dir,a,func,dist):
-        """Return a Formex with a one-dimensional bump.
+        """Impose a one-dimensional bump on the Formex.
 
         dir specifies the axis of the modified coordinates;
         a is the point that forces the bumping;
@@ -892,27 +904,25 @@ class Formex:
         func is a function that calculates the bump intensity from distance
         !! func(0) should be different from 0.
         """
-        f = self.f.copy()
-        d = f[:,:,dist] - a[dist]
-        f[:,:,dir] += func(d)*a[dir]/func(0)
-        return Formex(f,self.p)
+        d = self.f[:,:,dist] - a[dist]
+        self.f[:,:,dir] += func(d)*a[dir]/func(0)
+        return self
     
     def bump2(self,dir,a,func):
-        """Return a Formex with a two-dimensional bump.
+        """Impose a two-dimensional bump on the Formex.
 
         dir specifies the axis of the modified coordinates;
         a is the point that forces the bumping;
         func is a function that calculates the bump intensity from distance
         !! func(0) should be different from 0.
         """
-        f = self.f.copy()
         dist = [0,1,2]
         dist.remove(dir)
-        d1 = f[:,:,dist[0]] - a[dist[0]]
-        d2 = f[:,:,dist[1]] - a[dist[1]]
+        d1 = self.f[:,:,dist[0]] - a[dist[0]]
+        d2 = self.f[:,:,dist[1]] - a[dist[1]]
         d = sqrt(d1*d1+d2*d2)
-        f[:,:,dir] += func(d)*a[dir]/func(0)
-        return Formex(f,self.p)
+        self.f[:,:,dir] += func(d)*a[dir]/func(0)
+        return self
 
     
     # This is a generalization of both the bump1 and bump2 methods.
@@ -922,7 +932,7 @@ class Formex:
     # the distance and a point for defining the intensity (3-D) of the
     # modification
     def bump(self,dir,a,func,dist=None):
-        """Return a Formex with a bump.
+        """Impose a bumps on a Formex.
 
         A bump is a modification of a set of coordinates by a non-matching
         point. It can produce various effects, but one of the most common
@@ -940,7 +950,6 @@ class Formex:
         Default value is the set of 3 axes minus the direction of modification.
         This function is then equivalent to bump2.
         """
-        f = self.f.copy()
         if dist == None:
             dist = [0,1,2]
             dist.remove(dir)
@@ -949,19 +958,19 @@ class Formex:
         except TypeError:
             l = 1
             dist = [dist]
-        d = f[:,:,dist[0]] - a[dist[0]]
+        d = self.f[:,:,dist[0]] - a[dist[0]]
         if l==1:
             d = abs(d)
         else:
             d = d*d
             for i in dist[1:]:
-                d1 = f[:,:,i] - a[i]
+                d1 = self.f[:,:,i] - a[i]
                 d += d1*d1
             d = sqrt(d)
         #print d
         #print a[dir]/func(0)
-        f[:,:,dir] += func(d)*a[dir]/func(0)
-        return Formex(f,self.p)
+        self.f[:,:,dir] += func(d)*a[dir]/func(0)
+        return self
 
     def map(self,func):
         """Return a Formex mapped by a 3-D function.
@@ -970,7 +979,7 @@ class Formex:
         func is a numerical function which takes three arguments and produces
         a list of three output values. The coordinates [x,y,z] will be
         replaced by func(x,y,z).
-        The function must be applicable on numarrays, so it should
+        The function must be applicable to numarrays, so it should
         only include numerical operations and functions understood by the
         numarray module.
         This method is one of several mapping methods. See also map1 and mapd.
@@ -979,9 +988,8 @@ class Formex:
         """
         f = zeros(self.f.shape,type=Float32)
         f[:,:,0],f[:,:,1],f[:,:,2] = func(self.f[:,:,0],self.f[:,:,1],self.f[:,:,2])
-        #self.f = f
-        #return self
-        return Formex(f,self.p)
+        self.f = f
+        return self
 
     def map1(self,dir,func):
         """Return a Formex where coordinate i is mapped by a 1-D function.
@@ -993,9 +1001,8 @@ class Formex:
         numarray module.
         This method is one of several mapping methods. See also map and mapd.
         """
-        f = self.f.copy()
-        f[:,:,dir] = func[i](self.f[:,:,dir])
-        return Formex(f,self.p)
+        self.f[:,:,dir] = func[i](self.f[:,:,dir])
+        return self
 
     def mapd(self,dir,func,point,dist=None):
         """Maps one coordinate by a function of the distance to a point.
@@ -1012,7 +1019,6 @@ class Formex:
         Example: E.mapd(2,lambda d:sqrt(10**2-d**2),f.center(),[0,1])
         maps E on a sphere with radius 10
         """
-        f = self.f.copy()
         if dist == None:
             dist = [0,1,2]
         try:
@@ -1020,17 +1026,26 @@ class Formex:
         except TypeError:
             l = 1
             dist = [dist]
-        d = f[:,:,dist[0]] - point[dist[0]]
+        d = self.f[:,:,dist[0]] - point[dist[0]]
         if l==1:
             d = abs(d)
         else:
             d = d*d
             for i in dist[1:]:
-                d1 = f[:,:,i] - point[i]
+                d1 = self.f[:,:,i] - point[i]
                 d += d1*d1
             d = sqrt(d)
-        f[:,:,dir] = func(d)
-        return Formex(f,self.p)
+        self.f[:,:,dir] = func(d)
+        return self
+
+    def elmap(self,func):
+        """Return a Formex where each element is mapped by a 3-D function.
+
+        """
+        f = concatenate( [ func(self.f[i] )
+        f[:,:,0],f[:,:,1],f[:,:,2] = func(self.f[:,:,0],self.f[:,:,1],self.f[:,:,2])
+        self.f = f
+        return self
 
     # This could be done by a map, but it is slightly cheaper to do it this way
     def replace(self,i,j,other=None):
@@ -1047,30 +1062,44 @@ class Formex:
         # ERROR
         if other == None:
             other=self
-        f = self.f.copy()
         for k in range(len(i)):
-            f[:,:,i[k]] = other.f[:,:,j[k]]
-        return Formex(f,self.p)
+            self.f[:,:,i[k]] = other.f[:,:,j[k]]
+        return self
 
     def swapaxes(self,i,j):
         """Swap coordinate axes i and j"""
         return self.replace([i,j],[j,i])
 
-    def circulize(self):
+    def circulize(self,angle):
+        """Transform a linear sector into a circular one.
+
+        A sector of the (0,1) plane with given angle, starting from the 0 axis,
+        is transformed as follows: points on the sector borders remain in
+        place. Points inside the sector are projected from the center on the
+        circle through the intersection points of the sector border axes and
+        the line through the point and perpendicular to the bisector of the
+        angle. See Diamatic example."""
+        e = tand(0.5*angle)
+        self.map(lambda x,y,z:[where(y==0,x,(x*x+x*y*e)/sqrt(x*x+y*y)),where(x==0,y,(x*y+y*y*e)/sqrt(x*x+y*y)),0])
+        return self
+
+    def circulize1(self):
         """Transforms the first octant of the 0-1 plane into 1/6 of a circle.
 
         Points on the 0-axis keep their position. Lines parallel to the 1-axis
         are transformed into circular arcs. The bisector of the first quadrant
         is transformed in a straight line at an angle Pi/6.
         This function is especially suited to create circular domains where
-        all bars have nearly same length. See the Scallopdome example.
+        all bars have nearly same length. See the Diamatic example.
         """
-        return map(lambda x,y,z:[where(x>0,x-y*y/(x+x),0),where(x>0,y*sqrt(4*x*x-y*y)/(x+x),y),0])
-        #return self
-        
+        self.map(lambda x,y,z:[where(x>0,x-y*y/(x+x),0),where(x>0,y*sqrt(4*x*x-y*y)/(x+x),y),0])
+        return self
+       
 ##############################################################################
 #
-#   Transformations that change the topology
+#   Transformations that change the topology :
+#
+#   THESE DO NOT CHANGE THE ORIGINAL, BUT OPERATE ON COPIES!!!
 #        
 
     def replic(self,n,step,dir):
@@ -1092,7 +1121,7 @@ class Formex:
         bias, taper : extra step and extra number of generations in direction
         d1 for each generation in direction d2
         """
-        P = [ self.translatem((d1,i*bias),(d2,i*t2)).replic(n1+i*taper,t1,d1)
+        P = [ self.copy().translatem((d1,i*bias),(d2,i*t2)).replic(n1+i*taper,t1,d1)
               for i in range(n2) ]
         ## We should replace the Formex concatenation here by
         ## separate data and prop concatenations, because we are
@@ -1135,6 +1164,11 @@ class Formex:
         for d,t in args:
             tr[d] += t
         return self.translate(tr)
+        
+
+    order = nelems
+    plexitude = nnodel
+    grade = ndim
 
     cantle = element
     signet = point
@@ -1156,7 +1190,7 @@ class Formex:
         return self.rindle(n,dir-1,dist)
 
     def lam(self,dir,dist):
-        return self+self.reflect(dir-1,dist)
+        return self.copy()+self.reflect(dir-1,dist)
 
     def ros(self,i,j,x,y,n,angle):
         if (i,j) == (1,2):
@@ -1190,7 +1224,7 @@ class Formex:
    
     def rinic(self,*args):
         n = len(args)/3
-        F = self
+        F = self.copy()
         for d,m,t in zip(args[:n],args[n:2*n],args[2*n:]):
             F = F.rin(d,m,t)
         return F
@@ -1203,7 +1237,7 @@ class Formex:
 
     def lamic(self,*args):
         n = len(args)/2
-        F = self
+        F = self.copy()
         for d,p in zip(args[:n],args[n:]):
             F = F.lam(d,p)
         return F
