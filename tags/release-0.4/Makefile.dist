@@ -1,0 +1,87 @@
+#  -*- Makefile -*-  for creating pyFormex releases
+# $Id: Makefile 53 2005-12-05 18:23:28Z bverheg $
+#
+
+include RELEASE
+
+PYFORMEXDIR= pyformex-${RELEASE}
+PYSOURCE= ${addsuffix .py, ${PYMODULES}} 
+PYGUISOURCE= ${addprefix gui/,${addsuffix .py,${PYGUIMODULES}}}
+PLUGINSOURCE= ${addprefix plugins/,${addsuffix .py,${PLUGINMODULES}}}
+OTHERSOURCE= pyformexrc
+ICONFILES= $(wildcard icons/*.xpm) $(wildcard icons/pyformex_*.png)
+DOCDIR= doc
+HTMLDIR= ${DOCDIR}/html
+HTMLDOCS= ${addprefix ${HTMLDIR}/,${PYSOURCE:.py=.html} }
+HTMLGUIDOCS= ${addprefix ${HTMLDIR}/, ${addsuffix .html, gui ${addprefix gui.,${PYGUIMODULES}}}}
+STAMPFILES= README History Makefile FAQ
+NONSTAMPFILES= COPYING RELEASE ReleaseNotes-${VERSION} Description 
+EXAMPLEFILES= ${addprefix examples/,${addsuffix .py, ${EXAMPLES} }}
+IMAGEFILES=  ${addprefix screenshots/,${addsuffix .png,${IMAGES}}}
+STAMP= Stamp 
+VERSIONSTRING= "pyFormex .*"
+NEWVERSIONSTRING= "pyFormex ${RELEASE}"
+PKG= ${PYFORMEXDIR}.tar.gz
+PKGDIR= releases
+
+.PHONY: dist release distdir modules distclean stamp dist.stamped manual
+
+############ Creating Distribution ##################
+
+# Create the distribution
+dist: ${PKGDIR}/${PKG}
+
+# Publish the distribution to our ftp server
+pub: 
+	scp ${PKGDIR}/${PKG} bumps:/home/ftp/pub/pyformex
+
+${PKGDIR}/${PKG}: version ${PYFORMEXDIR}
+	mkdir -p ${PKGDIR}
+	tar czf ${PKGDIR}/${PKG} ${PYFORMEXDIR}
+
+${PYFORMEXDIR}: dist.stamped
+
+distclean:
+	rm -rf ${PYFORMEXDIR}
+	alldirs . "rm -f *~"
+
+pydoc: ${HTMLDIR}/index.html
+
+${HTMLDIR}/index.html: ${HTMLDOCS} ${HTMLGUIDOCS} ${DOCDIR}/htmlindex.header ${DOCDIR}/htmlindex.footer
+	./make_doc_index	
+
+${HTMLDIR}/%.html: %.py
+	pydoc -w ./$< && mv $*.html ${HTMLDIR}
+
+${HTMLDIR}/gui.html: gui
+	pydoc -w gui && mv gui.html ${HTMLDIR}
+
+${HTMLDIR}/gui.%.html: gui/%.py
+	pydoc -w gui.$* && mv gui.$*.html ${HTMLDIR}
+
+manual:
+	make -C manual
+
+stamp: Stamp.template RELEASE
+	${STAMP} -tStamp.template version=${VERSION} -oStamp.stamp
+
+dist.stamped:  distclean stamp globaldata.py ${PYSOURCE} ${PYGUISOURCE} ${OTHERSOURCE} ${EXAMPLEFILES} ${STAMPFILES} ${NONSTAMPFILES}  ${ICONFILES} ${IMAGEFILES}  ${HTMLDOCS}
+	mkdir ${PYFORMEXDIR} ${PYFORMEXDIR}/gui ${PYFORMEXDIR}/icons ${PYFORMEXDIR}/plugins ${PYFORMEXDIR}/examples ${PYFORMEXDIR}/images ${PYFORMEXDIR}/html ${PYFORMEXDIR}/manual ${PYFORMEXDIR}/manual/html ${PYFORMEXDIR}/manual/images
+	${STAMP} -tStamp.stamp -d${PYFORMEXDIR} ${PROGRAM} ${PYSOURCE} ${OTHERSOURCE}
+	${STAMP} -tStamp.stamp -d${PYFORMEXDIR}/gui ${PYGUISOURCE}
+	${STAMP} -tStamp.stamp -d${PYFORMEXDIR}/plugins ${PLUGINSOURCE}
+	${STAMP} -tStamp.stamp -d${PYFORMEXDIR}/examples ${EXAMPLEFILES}
+	${STAMP} -tStamp.stamp -d${PYFORMEXDIR} ${STAMPFILES}
+	cp ${NONSTAMPFILES} ${PYFORMEXDIR}
+	cp ${ICONFILES}  ${PYFORMEXDIR}/icons
+	cp ${IMAGEFILES} ${PYFORMEXDIR}/images
+	cp ${HTMLDOCS} ${HTMLDIR}/index.html    ${PYFORMEXDIR}/html
+	cp ${MANUAL}   ${PYFORMEXDIR}/manual
+	cp ${MANUALHTML}   ${PYFORMEXDIR}/manual/html
+	cp ${MANUALIMAGES}   ${PYFORMEXDIR}/manual/images
+	cp ${DESKTOPFILE} ${PYFORMEXDIR}/${VENDOR}-${DESKTOPFILE}
+
+version: globaldata.py
+
+globaldata.py: RELEASE
+	replace -f '${VERSIONSTRING}' '${NEWVERSIONSTRING}' $@
