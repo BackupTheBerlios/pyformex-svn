@@ -1,0 +1,93 @@
+% pyFormex manual (we use the python manual class)
+% $Id$
+% (C) B.Verhegghe
+%
+\documentclass[a4paper]{manual}
+%
+%% Dirty hack to make Python classes work together with hyperref
+\let\pyurl\url
+\let\url\relax
+%%
+\usepackage{a4wide}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{makeidx}
+\usepackage{hyperref}
+%\usepackage[latex2html]{hyperref}
+%\usepackage[latex2html,pdftex]{hyperref}
+\usepackage{html}
+\usepackage{xspace}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{verbatim}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyfoot{}
+\lhead[\sf\leftmark]{}
+\rhead[]{\sf\rightmark}
+\lfoot[\sf\thepage]{}
+\rfoot[]{\sf\thepage}
+
+
+% Document identification
+\title{\pyformex manual}
+\author{Tim Neels and Benedict Verhegghe}
+\release{0.4.2}
+\setshortversion{0.4.2}
+
+% pyFormex and its website
+\newcommand{\pyformex}{pyFormex\xspace}
+\newcommand{\pyFormex}{pyFormex\xspace}  % we tend to mistype this one!
+\newcommand{\pyf}{pyFormex\xspace} % saves some typing (and mistyping)
+\newcommand{\websiteURL}{http://pyformex.berlios.de\xspace}
+\newcommand{\pydocpages}{http://pyformex.berlios.de/doc\xspace}
+\newcommand{\pythonURL}{http://www.python.org\xspace}
+\newcommand{\pythonTUT}{http://docs.python.org/tut/\xspace}
+\newcommand{\pythonBEG}{http://wiki.python.org/moin/BeginnersGuide/\xspace}
+\newcommand{\numpyURL}{http://numpy.scipy.org/\xspace}
+\newcommand{\numpyTUT}{http://www.scipy.org/Tentative_NumPy_Tutorial\xspace}
+\newcommand{\latestpyf}{http://prdownload.berlios.de/pyformex/pyformex.tar.gz\xspace}
+
+% code 
+% The following is just for illustration how to include code.
+% Do not uncomment: it will not work. Directly use the definitions instead.
+\newcommand{\Code}[1]{\texttt{\small #1}}
+\newcommand{\CodeLine}[1]{\\\texttt{~~~#1}\\}
+%\newenvironment{CodePart}{\begin{verbatim}}{\end{verbatim}}
+%\newcommand{\CodeFile}[1]{\verbatiminput{#1}}
+
+\newcommand{\classmethod}{\emph{This is a class method, not an instance method.}}
+\makeindex
+
+\begin{document}
+\maketitle
+\begin{titlepage}
+~
+\end{titlepage}
+\thispagestyle{empty}
+%\setcounter{page}{0}
+\begin{latexonly}
+  \tableofcontents
+\end{latexonly}
+\input{preface}
+\input{intro}
+\input{tutorial}
+\input{gui}
+\input{config}
+\input{examples}
+\input{plugins}
+\input{refman}
+\appendix
+\input{app-gpl}
+
+\addcontentsline{toc}{chapter}{Index}
+\printindex%     first use program MAKEIND to make index !!
+
+\end{document}
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

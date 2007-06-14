@@ -1,0 +1,46 @@
+This is the TODO file for the pyFormex project.
+
+This files holds the plans for new features, enhancements and changes that we
+will try to implement in the future releases. 
+There is no guarantee that the tasks mentioned here will indeed be completed
+in time (if ever!). It is mainly intended for the developers, to see who is
+working on what.
+
+
+Each task can have the following keys:
+ - dev(eloper)
+ - sta(tus)
+ - rem(arks)
+
+Release 0.5 :
+ - Detect and register extension software (calpy,tetgen,admesh,gl2ps,
+     commands: awk, )
+ - Turn the menu plugins (STL, Formex) into importable modules
+     dev: bverheg
+     sta: EXPERIMENTING
+ - Python style installation procedure:
+ - Multiple views:
+ - Display camera settings: 
+ - Rendering of values on the domain:
+     dev: bverheg
+     sta: INITIATED
+     rem: Feasability demonstrated through some examples: *_calpy.py
+ - Manual:
+     dev: all
+     sta: UNDER DEVELOPMENT
+     rem: Obviously, the manual will always stay under development. We will
+          remove it from this todo list when it deals with most aspects
+          of the next pyFormex release.
+ - Interactive selection/transformation:
+ - Faster Formex->FeModel transformation (possibly implement in C):
+ - Faster loading of large STL models (possibly in C):
+ - Export FEA models in Fluent format: 
+
+
+Release 0.6 :
+ - Provide a formian to pyformex translator
+ - Step by step execution of scripts
+ - Move the core modules to a subpackage, others to plugins/gui
+
+Release 0.9 :
+ - Dedicated editor

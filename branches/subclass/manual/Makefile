@@ -1,0 +1,32 @@
+# Makefile for the pyFormex manual
+#
+
+PYTHONDIR=/usr/lib/python2.4
+MKHOWTO=${PYTHONDIR}/doc/tools/mkhowto
+TEXINPUTS=${PYTHONDIR}/doc/texinputs
+TGT=manual
+SRC=${TGT}.tex pyformex.help 
+HTMLDIR=html
+FAVICON=../favicon.ico
+OPTIONS= --up-title "pyFormex Home Page" --up-link "http://pyformex.berlios.de" --image-type png --favicon ${FAVICON}
+
+# Default target
+.PHONY all: pdf ps html
+
+.PHONY pdf: ${TGT}.pdf
+
+.PHONY ps: ${TGT}.ps
+
+.PHONY html: html/${TGT}.html
+
+pyformex.help: ../pyformex.py
+	../pyformex.py --help > $@
+
+${TGT}.pdf: ${SRC}
+	${MKHOWTO} --a4 --pdf $<
+
+${TGT}.ps: ${SRC}
+	${MKHOWTO} --a4 --ps $<
+
+html/${TGT}.html: ${SRC}
+	${MKHOWTO} --html --dir ${HTMLDIR} $(OPTIONS)  $<
