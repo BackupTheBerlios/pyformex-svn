@@ -1,0 +1,27 @@
+.. This may look like plain text, but is really -*- rst -*-
+restindex	
+    crumb: Developer
+    format: rest
+    page-title: pyFormex Developer
+    encoding: utf-8
+    output-encoding: None
+    initialheaderlevel: 2
+/restindex
+  
+  
+Developer
+---------
+  
+.. _`Summary`: http://developer.berlios.de/projects/pyformex/
+.. _`SVN`: http://developer.berlios.de/svn/?group_id=2717
+.. _`Releases`: http://developer.berlios.de/project/showfiles.php?group_id=2717
+.. _`Forums`: http://developer.berlios.de/forum/?group_id=2717
+.. _`Bug tracker`: http://developer.berlios.de/bugs/?group_id=2717
+
+
+- `Summary`_
+- `SVN`_
+- `Releases`_
+- `Forums`_
+- `Bug tracker`_
+

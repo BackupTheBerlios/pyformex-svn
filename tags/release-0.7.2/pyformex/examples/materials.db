@@ -1,0 +1,20 @@
+# $Id$
+##
+## This file is part of pyFormex 0.7.2 Release Tue Sep 23 16:18:43 2008
+## pyFormex is a Python implementation of Formex algebra
+## Website: http://pyformex.berlios.de/
+## Copyright (C) Benedict Verhegghe (benedict.verhegghe@ugent.be) 
+##
+## This program is distributed under the GNU General Public License
+## version 2 or later (see file COPYING for details)
+##
+# Sample materials database
+# Units are N and mm
+material
+	name=steel
+	young_modulus=210000
+	shear_modulus=85000
+	density = 7.85e-9
+	poisson_ratio = 0.3
+endmaterial
+
