@@ -1,0 +1,101 @@
+HOWTO for pyFormex developers:       -*- outline-*-
+==============================
+(Hint: this file can best be viewed/edited with GNU/Emacs)
+
+* Things that can be done by any developer
+
+** Create/change your local subversion tree
+
+*** checkout the current subversion archive in a subdir 'pyformex'
+svn co svn+ssh://svn.berlios.de/svnroot/repos/pyformex/trunk pyformex
+
+*** create a branch 'mybranch' of the current subversion archive
+svn copy svn+ssh://svn.berlios.de/svnroot/repos/pyformex/trunk svn+ssh://svn.berlios.de/svnroot/repos/pyformex/branches/mybranch -m "Creating a branch for some purpose"
+
+*** change your local directory to another branch:
+svn switch svn+ssh://svn.berlios.de/svnroot/repos/pyformex/branches/mybranch
+
+
+** Create the manual
+
+You need to install the following packages (on debian):
+  python-dev
+  latex2html
+
+In the main pyformex directory (svn tree) do:
+  make manual
+This will generate: 
+  - PDF version:  manual/manual.pdf
+  - PS version:   manual/manual.ps
+  - HTML version: manual/html/
+
+            
+** Create a distribution
+
+In the main pyformex directory (svn tree) do:
+  svn ci
+  svn up
+  make dist
+This will create a pyformex-${VERSION}.tar.gz in dist/
+
+
+* Things that are (currently) for project manager only
+
+** Make a distribution available on our own FTP server
+  make publocal
+
+** Make a distribution available on Berlios FTP server
+  make pub
+
+** Release a distribution to the general public
+
+!! First create the distribution and test it out locally !! 
+
+Set the final version in RELEASE (RELEASE==VERSION)
+  make version
+Stamp the files with the version
+  make stampall
+Check in (creating the dist may modify some files)
+  svn ci -m "Creating release ..."
+Create a Tag
+  make tag
+Create a distribution
+  svn up
+  make dist
+Put the file on berlios ftp server
+  ftp -p ftp.berlios.de
+  name: ftp (anoniem)
+  cd incoming
+  lcd dist
+  put fullfilename
+Release the file via project administration
+  inloggen
+  project
+  admin
+  edit/release files
+  QRS: quick release a file
+    Release: vb: 0.4.2
+    Select a file
+    File type : source gz
+    Processor type :Any
+    Release Notes
+  Release file
+Announce the release on the pyFormex news
+  news
+  submit
+    >> text: pyFormex Version released....
+Make the release available on Berlios FTP server
+  make pub
+Make the release available on our local FTP server
+  make publocal
+Register with the python package index
+  make register
+Bump the RELEASE and VERSION variables in the file RELEASE:
+  make bumpversion
+  make version
+  svn ci -m 'Bump version after release'
+
+
+(That was easy, uh?)
+
+

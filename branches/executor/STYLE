@@ -1,0 +1,63 @@
+# STYLE
+#
+# This file holds some recommendations about the style to be used for
+# pyFormex development and the use of the subversion repository.
+#
+
+- Make sure the following is in your subversion configuration 
+  (~/.subversion/config):
+
+global-ignores = *~ *.pyc
+use-commit-times = yes
+enable-auto-props = yes
+[auto-props]
+*.py = svn:eol-style=native;svn:keywords=Id
+
+
+- All new source files in the pyFormex repository should be created with the
+  following line on the first OR second line:
+
+- Name of .py files should be only lowercase, except for the approved
+  examples distributed with pyFormex, which should start wih an upper case.
+ 
+- Start text (also .py) files with the following line:
+
+# $Id$
+
+- A first line different from the above may be used to flag an executable
+  script, as in the examples below.
+
+- Start executable python scripts with the following two lines:
+
+#!/usr/bin/env python
+# $Id$
+
+- Start pyformex scripts with the following two lines:
+
+#!/usr/bin/env python pyformex
+# $Id$
+
+- End your text files with a line
+
+# End
+
+- Never directly edit the $Id line: it is automatically handled by subversion
+
+- .py files may/should end with a section
+
+if __name__ == "__main__":
+
+  followed by whatever is needed to test the functionality of the module
+
+- exported names should preferably follow the convention:
+  - all lowercase for (global) variable names
+  - lowerUpperUpper for function names
+  - UpperUpperUpper for class names
+
+=======================
+- Some numpy specifics:
+=======================
+
+- Preference:    attributes  >>   methods   >>    functions
+- E.g. use A.shape instead of shape(A)
+
