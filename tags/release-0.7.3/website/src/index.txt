@@ -1,0 +1,8 @@
+restindex	
+    crumb: Site Index
+    format: rest
+    page-title: pyFormex Site Index
+    section-pages: ,pyformex,documentation,screenshots,examples/index,pyformexinuse,download,support,usermeeting,developer,links
+    encoding: utf-8
+    output-encoding: None
+/restindex

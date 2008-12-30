@@ -1,0 +1,79 @@
+#!/bin/sh
+#
+# This script helps with installing the gts library and utilities from source:
+#
+# Prerequisites: libglib2.0-dev
+#
+# ./gts_install get unpack patch make
+# sudo ./gts_install install rename
+# ./gts_install clean
+#
+# Use at your own risk if you do not understand what is happening!
+#
+
+VERSION=0.7.6
+NAME=gts-$VERSION
+ARCHIVE=$NAME.tar.gz
+URI=http://prdownloads.sourceforge.net/gts/$ARCHIVE
+
+examples="cartesian cleanup coarsen delaunay gtstoc iso merge oocs optimize partition refine set smooth sphere split stripe transform traverse volume"
+
+get() {
+  wget $URI
+}
+
+unpack() {
+  tar xvzf $ARCHIVE
+}
+
+Make() {
+  cd $NAME
+  ./configure
+  make
+}
+
+install() {
+  [ "$EUID" == "0" ] || {
+      echo "install should be done as root!"
+      return
+  }
+  cd $NAME
+  make install
+}
+
+Patch() {
+    cd $NAME
+    patch -p0 < ../gts-0.7.6-bv.patch
+}
+
+# !! Only examples delaunay and transform are installed.
+# Better copy from build directory
+rename() {
+  [ "$EUID" == "0" ] || {
+      echo "install should be done as root!"
+      return
+  }
+  for name in $examples; do
+      gtsname=gts${name#gts}
+      src=/usr/local/bin/$name
+      tgt=/usr/local/bin/$gtsname
+      [ -f "$src" -a "$src" != "$tgt" ] && mv $src $tgt
+  done
+}
+
+clean() {
+    rm -rf $NAME
+    rm -f $ARCHIVE
+}
+
+for cmd in "$@"; do
+
+    case $cmd in 
+	get | unpack | install | rename | clean ) $cmd;;
+	patch ) Patch;;
+	make ) Make;;
+	all ) get;unpack;Patch;Make;install;rename;clean;;
+        * ) echo "UNKNOWN command $cmd";;
+    esac
+
+done
