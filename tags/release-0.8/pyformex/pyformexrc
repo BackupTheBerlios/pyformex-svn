@@ -1,0 +1,154 @@
+# This is the default pyFormex config file. DO NOT CHANGE IT!  -*- PYTHON -*-
+##
+##  This file is part of pyFormex 0.8 Release Sat Jun 13 10:22:42 2009
+##  pyFormex is a tool for generating, manipulating and transforming 3D
+##  geometrical models by sequences of mathematical operations.
+##  Website: http://pyformex.berlios.de/
+##  Copyright (C) Benedict Verhegghe (bverheg@users.berlios.de) 
+##  Distributed under the GNU General Public License version 3 or later.
+##
+##
+##  This program is free software: you can redistribute it and/or modify
+##  it under the terms of the GNU General Public License as published by
+##  the Free Software Foundation, either version 3 of the License, or
+##  (at your option) any later version.
+##
+##  This program is distributed in the hope that it will be useful,
+##  but WITHOUT ANY WARRANTY; without even the implied warranty of
+##  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##  GNU General Public License for more details.
+##
+##  You should have received a copy of the GNU General Public License
+##  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+##
+#
+# Changes should go to /etc/pyformexrc (for site-wide changes)
+# or to ~/.pyformexrc (for personal settings).
+# If your are missing these files, you can safely copy (parts of) this file
+# as a start. 
+# Config settings are read in order from this file, then /etc/pyformexrc,
+# ~/.pyformex/pyformexrc. The last settings will override previous ones.
+#
+# The config is now read by the config.Config class
+# Two variables are set on entry: pyformexdir, homedir
+#
+import os
+
+
+# files and directories
+workdir = "."
+icondir = os.path.join(pyformexdir,'icons')
+examplesdir = os.path.join(pyformexdir,'examples')
+userconfdir = os.path.join(homedir,'.pyformex')
+siteprefs = '/etc/pyformexrc'
+localprefs = '.pyformexrc'
+scripttemplate = os.path.join(pyformexdir,'template.py')
+
+# scriptdirs is a list of (title,dir) tuples
+# for 'examples', the directory will be filled in automagically
+scriptdirs = [ ('examples','') ]
+history = []
+
+# extra paths to append tot sys.path
+syspath = []
+
+
+# commands
+### THESE MAY BE CHANGED BY THE INSTALLATION PROCEDURE
+editor = os.environ.get('VISUAL','')
+viewer = 'firefox'   # html viewer
+browser = 'firefox'  # web browser
+
+autoglobals = True
+uselib = True
+
+
+
+
+[gui]
+#imagesfromeps = True
+
+splash = os.path.join(icondir,'pyformex-splash.png')
+plugins = ['formex_menu','tools_menu']
+style = "Plastique"
+size=(800,600)
+pos=(0,0)
+fullscreen = False
+icontype = '.xpm'
+
+cameramenu = True    # add camera menu
+camerabar = True     # add a Camera toolbar
+modemenu = True      # add a Mode menu
+modebar = True       # add a Mode toolbar
+viewmenu = True      # add a Views menu
+viewbar = True       # add a Views toolbar
+examplesmenu = True  # add examples menu
+timeoutbutton = False # add the timeout button to toolbar
+lightbutton = True   # add the light button to toolbar
+
+defviews = [('front','view-xr-yu'),('back','view-xl-yu'),\
+            ('right','view-zl-yu'),('left','view-zr-yu'),\
+            ('top','view-xr-zd'),('bottom','view-xr-zu'),\
+            ('iso','view-iso1'),\
+            ]
+zoomfactor = 1.15      # zooming factor for zoom buttons
+rotfactor = 5.         # rotation angle for rotation buttons
+panfactor = 0.05       # translation factor for pan buttons
+autozoomfactor = 1.732 # enlargement factor for the autozoom (sqrt(3))
+wheelzoomfactor = 0.25  # enlargement factor for the wheelzoom
+dynazoom = ['area','dolly']     # preferred zoom technique ('area', 'dolly', 'lens' or 'none')
+wheelzoom = 'dolly'    # action performed by the wheel ('area', 'dolly', 'lens')
+
+[input]
+timeout = -1         # never timeout
+
+[canvas]
+bgcolor = 'lightgrey'
+fgcolor = 'black'
+slcolor = 'red'
+linewidth = 1
+propcolors = ['black','red','green','blue','cyan','magenta','yellow','white'] 
+                 # a default color set for properties
+
+[mark]
+avgnormalsize = '_auto_'
+
+
+[draw]
+wait = 0  # time(sec.) to wait between draw operations (None is indefinitely)
+flywait = 0.3  # time(sec.) to wait between subsequent views in auto flying
+localaxes = True     # by default, buttons rotate/pan in local axes
+
+
+[pick]
+size=(12,12) # size of the pick window
+
+[render]
+mode = 'wireframe'
+ambient = 0.5
+specular = 0.3
+emission = 0.1
+shininess = 0.5
+light0 = {'position':(0.,0.,1.,0.),'specular':0.3,'diffuse':0.5,'ambient':0.6}
+light1 = {'position':(1.,0.,1.,0.),'specular':0.3,'diffuse':0.5,'ambient':0.6}
+light2 = {'position':(0.,1.,1.,0.),'specular':0.3,'diffuse':0.5,'ambient':0.6}
+#light3 = {'position':(-1.,0.,1.,0.),'specular':0.3,'diffuse':0.5,'ambient':0.5}
+#light4 = {'position':(0.,-1.,1.,0.),'specular':0.3,'diffuse':0.5,'ambient':0.5}
+avgnormaltreshold = 0.5
+
+
+[help]
+manual = os.path.join(pyformexdir,"manual","html","index.html")
+pydocs = os.path.join(pyformexdir,"doc","html","index.html")
+readme = os.path.join(pyformexdir,"doc","README")
+license = os.path.join(pyformexdir,"doc","COPYING")
+website = "http://pyformex.berlios.de" 
+webmanual = website+"/manual"
+links = {'pyformex':'pyformex.org','ibitech':'www.ibitech.ugent.be','python':'www.python.org','pyformex-dev':'developer.berlios.de/projects/pyformex','stent-boys':'www.stent-ibitech.ugent.be'}
+
+[keys]
+save = 'F2'
+
+
+[surface]
+stlread = '.gts'
