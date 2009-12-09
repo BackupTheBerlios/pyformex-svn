@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title><% title %></title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="description" content="pyFormex - A tool for generating, manipulating and operating on large geometrical models of 3D structures by sequences of mathematical transformations" />
+<meta name="keywords" content="3D modeling geometry surface mesh STL finite element stent" />
+<link rel="stylesheet" href="<% path_to_root %>pyformex.css" type="text/css" />
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="top1">
+  <img src="<% path_to_root %>images/scallop_dome_small.png" alt="scallop dome" border="0" hspace="20" vspace="12" align="left" />
+  <img src="<% path_to_root %>images/pyformex_logo.png" alt="pyformex logo" border="0" hspace="10" vspace="12" align="left" />
+</div>
+
+
+<div id="nav">
+<ul>
+<#
+  for page in sidebar(indextree,'<div class="menu">'):
+    val = page['crumb']
+    if 'Index' in val:
+      continue
+    link = page['target']
+    if page['title']:
+      clas = 'section'
+    else:
+      clas = 'page'
+    if thispage['crumb'] == val:
+      clas = 'this'+clas
+    clas = 'class="%s"' % clas
+    print '<li><a %s href="%s">%s</a></li>' % (clas,link,val)
+    if thispage['crumb'] == val:
+      if page['uservalues'].has_key('anchors'):
+        print '<ul>'
+        for a in anchors.split(','):
+          print '<li><a href="#%s">%s</a></li>' % (a.lower(),a)
+        print '</ul>'
+#>
+<div class="menu">
+<li><a class="main" href="http://developer.berlios.de/projects/pyformex/">Project Page at Berlios</a></li>
+</div>
+</ul>
+</div>
+
+
+<div id="content">
+
+  <% body %>
+  
+  <br/>
+  <br/>
+  <br/>
+  <br/>
+  
+  <hr/>
+  <div>
+  <table width="100%" border="0" cellpadding="0" cellspacing="0" summary="Footer">
+  <tr>
+  <td align="left">Last modified: <% modtime %></td>
+  <td align="right">Site built with <a href="http://www.voidspace.org.uk/python/rest2web/">rest2web</a></td>
+  </tr>
+  </table>
+  </div>
+</div>
+
+</div>
+
+</body>
+</html>
