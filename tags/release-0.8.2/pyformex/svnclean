@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+pyformexdir=$(dirname $0)
+cd $pyformexdir
+pwd
+rm -f gui/gui.pyc
+rm -f scriptsmenu.pyc
+rm -f gui/help.pyc
+

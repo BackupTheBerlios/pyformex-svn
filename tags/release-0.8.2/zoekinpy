@@ -1,0 +1,21 @@
+#!/bin/sh
+# Zoek een string in all .py files
+#
+
+cd $(dirname $0)
+
+#set -f
+files="pyformex/pyformex pyformex/*.py pyformex/gui/*.py pyformex/plugins/*.py pyformex/lib/*.py  pyformex/examples/*.py pyformex/examples/*/*.py"
+
+
+if [ "$1" = "-a" ]; then
+    shift
+    for d in local local/* stent faceting osteo; do
+	[ -d "$d" ] && files="$files $d/*.py"
+    done
+fi
+#echo "$files"
+#set +f
+#echo $files
+ 
+grep "$@" $files
