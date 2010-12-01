@@ -527,8 +527,8 @@ class TriSurface(Mesh):
             else:
                 raise RuntimeError,"Too many positional arguments"
 
-            if 'prop' in kargs:
-                self.setProp(kargs['prop'])
+        if 'prop' in kargs:
+            self.setProp(kargs['prop'])
 
 
 ###########################################################################
@@ -575,13 +575,20 @@ class TriSurface(Mesh):
         warnings.warn('warn_trisurface_getfaces')
         return Mesh.getFaces(self)
 
+
+###########################################################################
+    #
+    #   Operations that change the TriSurface itself
+    #
+    #  Make sure that you know what you're doing if you use these
+    #
     #
     # Changes to the geometry should by preference be done through the
     # __init__ function, to ensure consistency of the data.
     # Convenience functions are defined to change some of the data.
     #
 
-    def _set_coords(self,coords):
+    def setCoords(self,coords):
         """Change the coords."""
         self.__init__(coords,self.elems,prop=self.prop)
         return self
@@ -593,11 +600,6 @@ class TriSurface(Mesh):
     def setEdgesAndFaces(self,edges,faces):
         """Change the edges and faces."""
         self.__init__(self.coords,edges,faces,prop=self.prop)
-
-
-    def refresh(self):
-        # The object should now always be consistent
-        raise RuntimeError,"The implementation of TriSurface has changed!\n You should adopt your code to the new implementation, and no longer use 'refresh'"
 
 
     def append(self,S):
@@ -623,61 +625,13 @@ class TriSurface(Mesh):
             prop = concatenate((self.prop,p))
         self.__init__(coords,elems,prop=prop)
 
-       
-    def copy(self):
-        """Return a (deep) copy of the surface."""
-        S = TriSurface(self.coords.copy(),self.elems.copy())
-        if self.prop is not None:
-            S.setProp(self.prop.copy())
-        return S
-
-##    #this is already implemented with the same name in Mesh, and a TriSurface is also a Mesh.
-    ## def select(self,idx,compact=True):
-    ##     """Return a TriSurface which holds only elements with numbers in ids.
-
-    ##     idx can be a single element number or a list of numbers or
-    ##     any other index mechanism accepted by numpy's ndarray
-    ##     By default, the vertex list will be compressed to hold only those
-    ##     used in the selected elements.
-    ##     Setting compress==False will keep all original nodes in the surface.
-    ##     """
-    ##     S = TriSurface(self.coords, self.elems[idx])
-    ##     if self.prop is not None:
-    ##         S.setProp(self.prop[idx])
-    ##     if compact:
-    ##         S.compact()
-    ##     return S
-
-    # Some functions for offsetting a surface
-
-
-    # ?? IS THIS DIFFERENT FROM avgVertexNormals ??
-    def pointNormals(self):
-        """Compute the normal vectors at the points.
-        
-        The normal vector in a point is the average of the normal vectors of
-        all the neighbouring triangles.
-        The normal vectors are normalized before they are returned.
-        """
-        # get list of elements connected to each point
-        con = self.nodeConnections()
-        NP = self.areaNormals()[1][con] #self.normal doesn't work here???
-        w = where(con == -1)
-        NP[w] = 0.
-        NPA = NP.sum(axis=1)
-        NPA /= sqrt((NPA*NPA).sum(axis=-1)).reshape(-1,1)
-        return NPA
-
-    def offset(self,distance=1.):
-        """Offset a surface with a certain distance.
-        
-        All the nodes of the surface are translated over a specified distance
-        along their normal vector.
-        """
-        NPA = self.pointNormals()
-        coordsNew = self.coords + NPA*distance
-        return TriSurface(coordsNew,self.getElems())
    
+
+
+###########################################################################
+    #
+    #   read and write
+    #
 
     @classmethod
     def read(clas,fn,ftype=None):
@@ -742,12 +696,7 @@ class TriSurface(Mesh):
         else:
             print("Cannot save TriSurface as file %s" % fname)
 
-
-    @coordsmethod
-    def reflect(self,*args,**kargs):
-        if kargs.get('invert_normals',True) == True:
-            elems = self.getElems()
-            self.setElems(column_stack([elems[:,0],elems[:,2],elems[:,1]]))
+        
 
 
 ####################### TriSurface Data ######################
@@ -1114,6 +1063,38 @@ Total area: %s; Enclosed volume: %s
             return dist
 
 
+##################  Transform surface #############################
+    # All transformations now return a new surface
+
+    def offset(self,distance=1.):
+        """Offset a surface with a certain distance.
+        
+        All the nodes of the surface are translated over a specified distance
+        along their normal vector.
+        """
+        n = self.avgVertexNormals()
+        coordsNew = self.coords + NPA*distance
+        return TriSurface(coordsNew,self.getElems(),prop=self.prop)
+
+
+    def reflect(self,*args,**kargs):
+        """Reflect the Surface in direction dir against plane at pos.
+
+        Parameters:
+
+        - `dir`: int: direction of the reflection (default 0)
+        - `pos`: float: offset of the mirror plane from origin (default 0.0)
+        - `inplace`: boolean: change the coordinates inplace (default False)
+        - `reverse`: boolean: revert the normals of the triangles
+          (default True).
+          Reflection of the coordinates of a 2D Mesh reverses the surface
+          sides. Setting this parameter True will cause an extra
+          reversion. This is what is expected in most surface mirroring
+          operations.
+        """
+        return Mesh.reflect(self,*args,**kargs)
+    
+
 ##################  Partitioning a surface #############################
 
 
@@ -1345,7 +1326,7 @@ Total area: %s; Enclosed volume: %s
 
     def cutWithPlane(self,*args,**kargs):
         """Cut a surface with a plane."""
-        self.__init__(self.toFormex().cutWithPlane(*args,**kargs))
+        return TriSurface(self.toFormex().cutWithPlane(*args,**kargs))
 
 
     def connectedElements(self,target,elemlist=None):
@@ -1498,7 +1479,6 @@ Total area: %s; Enclosed volume: %s
         xmin,xmax = self.coords.directionalExtremes(dir,o)
         P = Coords.interpolate(xmin,xmax,nplanes)
         return [ self.intersectionWithPlane(p,dir) for p in P ]
-
 
 ##################  Smooth a surface #############################
 
@@ -1844,9 +1824,9 @@ Total area: %s; Enclosed volume: %s
         return S
 
 
-    @deprecation("cutAtPlane has been renamed to cutWithPlane. Please use the new name.")
-    def cutAtPlane(self,*args,**kargs):
-        return cutWithPlane(*args,**kargs)
+    ## @deprecation("cutAtPlane has been renamed to cutWithPlane. Please use the new name.")
+    ## def cutAtPlane(self,*args,**kargs):
+    ##     return cutWithPlane(*args,**kargs)
 
 
 ##########################################################################
