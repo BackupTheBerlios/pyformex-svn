@@ -1325,8 +1325,22 @@ Total area: %s; Enclosed volume: %s
 
 
     def cutWithPlane(self,*args,**kargs):
-        """Cut a surface with a plane."""
-        return TriSurface(self.toFormex().cutWithPlane(*args,**kargs))
+        """Cut a surface with a plane or a set of planes.
+
+        Cuts the surface with one or more plane and returns either one side
+        or both.
+
+        Parameters:
+        
+        - `p`,`n`: a point and normal vector defining the cutting plane.
+          p and n can be sequences of points and vector,
+          allowing to cut with multiple planes.
+          Both p and n have shape (3) or (npoints,3).
+
+        The parameters are the same as in :meth:`Formex.CutWithPlane`.
+        The returned surface will have its normals fixed wherever possible.
+        """
+        return TriSurface(self.toFormex().cutWithPlane(*args,**kargs)).fixNormals()
 
 
     def connectedElements(self,target,elemlist=None):
@@ -1482,16 +1496,43 @@ Total area: %s; Enclosed volume: %s
 
 ##################  Smooth a surface #############################
 
-    def smoothLowPass(self,n_iterations=2,lambda_value=0.5,neighbours=1):
-        """Smooth the surface using a low-pass filter.
+    
+    def smooth(self,method='lowpass',iterations=1,lambda_value=0.5,neighbourhood=1,alpha=0.0,beta=0.2,verbose=False):
+        """Smooth the surface.
+
+        Returns a TriSurface which is a smoothed version of the original.
+        Three smoothing methods are available: 'lowpass', 'laplace', and
+        'gts'. The first two are built-in, the latter uses the external
+        command `gtssmooth`.
+
+        Parameters:
         
-        This uses the nodes that are connected to the node via a shortest
-        path of minimum 1 and maximum 'neighbours' edges.
+        - `method`: 'lowpass', 'laplace', or 'gts'
+        - `iterations`: int: number of iterations
+        - `lambda_value`: float: lambda value used in the filters
+
+        Extra parameters for 'lowpass' and 'laplace':
+        
+        - `neighbourhood`: int: maximum number of edges to follow to define
+          node neighbourhood
+
+        Extra parameters for 'laplace':
+        
+        - `alpha`, `beta`: float: parameters for the laplace method.
+
+        Extra parameters for 'gts':
+        
+        - `verbose`: boolean: requests more verbose output of the `gtssmooth`
+          command
+
+        Returns: the smoothed TriSurface
         """
-        k = 0.1
-        mu_value = -lambda_value/(1-k*lambda_value)
+        method = method.lower()
+        if method == 'gts':
+            return self._gts_smooth(iterations,lambda_value,verbose)
+
         # find adjacency
-        adj = adjacencyArrays(self.getEdges(),nsteps=neighbours)[1:]
+        adj = adjacencyArrays(self.getEdges(),nsteps=neighbourhood)[1:]
         adj = column_stack(adj)
         # find interior vertices
         bound_edges = self.borderEdgeNrs()
@@ -1502,41 +1543,36 @@ Total area: %s; Enclosed volume: %s
         w[adj<0] = 0.
         val = (adj>=0).sum(-1).reshape(-1,1)
         w /= val
-        print val[0]
         w = w.reshape(adj.shape[0],adj.shape[1],1)
+
         # recalculate vertices
-        p = self.coords
-        for step in range(n_iterations/2):
-            p[inter_vertex] = p[inter_vertex] + lambda_value*(w[inter_vertex]*(p[adj[inter_vertex]]-p[inter_vertex].reshape(-1,1,3))).sum(1)
-            p[inter_vertex] = p[inter_vertex] + mu_value*(w[inter_vertex]*(p[adj[inter_vertex]]-p[inter_vertex].reshape(-1,1,3))).sum(1)
+        
+        if method == 'laplace':
+            xo = self.coords
+            x = self.coords.copy()
+            for step in range(iterations):
+                xn = x + lambda_value*(w*(x[adj]-x.reshape(-1,1,3))).sum(1)
+                xd = xn - (alpha*xo + (1-alpha)*x)
+                x[inter_vertex] = xn[inter_vertex] - (beta*xd[inter_vertex] + (1-beta)*(w[inter_vertex]*xd[adj[inter_vertex]]).sum(1))
+
+        else: # default: lowpass
+            k = 0.1
+            mu_value = -lambda_value/(1-k*lambda_value)
+            x = self.coords.copy()
+            for step in range(iterations):
+                x[inter_vertex] = x[inter_vertex] + lambda_value*(w[inter_vertex]*(x[adj[inter_vertex]]-x[inter_vertex].reshape(-1,1,3))).sum(1)
+                x[inter_vertex] = x[inter_vertex] + mu_value*(w[inter_vertex]*(x[adj[inter_vertex]]-x[inter_vertex].reshape(-1,1,3))).sum(1)
+                
+        return TriSurface(x,self.elems,prop=self.prop)
 
 
-    def smoothLaplaceHC(self,n_iterations=2,lambda_value=0.5,alpha=0.,beta=0.2,neighbours=1):
-        """Smooth the surface using a Laplace filter and HC algorithm.
+    def smoothLowPass(self,iterations=2,lambda_value=0.5,neighbours=1):
+        return self.smooth('lowpass',iterations/2,lambda_value,neighbours)
 
-        This uses the nodes that are connected to the node via a shortest
-        path of minimum 1 and maximum 'neighbours' edges.
-        """
-        # find adjacency
-        adj = adjacencyArrays(self.getEdges(),nsteps=neighbours)[1:]
-        adj = column_stack(adj)        
-        # find interior vertices
-        bound_edges = self.borderEdgeNrs()
-        inter_vertex = resize(True,self.ncoords())
-        inter_vertex[unique(self.getEdges()[bound_edges])] = False
-        # calculate weights
-        w = ones(adj.shape,dtype=float)
-        w[adj<0] = 0.
-        val = (adj>=0).sum(-1).reshape(-1,1)
-        w /= val
-        w = w.reshape(adj.shape[0],adj.shape[1],1)
-        # recalculate vertices
-        o = self.coords.copy()
-        p = self.coords
-        for step in range(n_iterations):
-            pn = p + lambda_value*(w*(p[adj]-p.reshape(-1,1,3))).sum(1)
-            b = pn - (alpha*o + (1-alpha)*p)
-            p[inter_vertex] = pn[inter_vertex] - (beta*b[inter_vertex] + (1-beta)*(w[inter_vertex]*b[adj[inter_vertex]]).sum(1))
+
+    def smoothLaplaceHC(self,iterations=2,lambda_value=0.5,alpha=0.,beta=0.2,neighbours=1):
+        return self.smooth('lowpass',iterations,lambda_value,neighbours,alpha,beta)
+
 
 
 ###################### Methods using admesh/GTS #############################
@@ -1623,6 +1659,9 @@ Total area: %s; Enclosed volume: %s
         os.remove(tmp)
         if sta or verbose:
             pf.message(out)
+        #
+        # WE SHOULD READ THIS FILES BACK !!!
+        #
    
 
     def coarsen(self,min_edges=None,max_cost=None,
@@ -1687,8 +1726,9 @@ Total area: %s; Enclosed volume: %s
         if sta or verbose:
             pf.message(out)
         pf.message("Reading coarsened model from %s" % tmp1)
-        self.__init__(*read_gts(tmp1))        
+        S = TriSurface.read(tmp1)        
         os.remove(tmp1)
+        return S
    
 
     def refine(self,max_edges=None,min_cost=None,log=False,verbose=False):
@@ -1730,11 +1770,12 @@ Total area: %s; Enclosed volume: %s
         if sta or verbose:
             pf.message(out)
         pf.message("Reading refined model from %s" % tmp1)
-        self.__init__(*read_gts(tmp1))        
+        S = TriSurface.read(tmp1)        
         os.remove(tmp1)
+        return S
 
 
-    def smooth(self,lambda_value=0.5,iterations=2,fold_smoothing=None,verbose=False):
+    def _gts_smooth(self,iterations=1,lambda_value=0.5,verbose=False):
         """Smooth the surface using gtssmooth.
 
         Smooth a surface by applying iterations of a Laplacian filter.
@@ -1746,14 +1787,13 @@ Total area: %s; Enclosed volume: %s
 
         - `lambda_value`: float: Laplacian filter parameter
         - `iterations`: int: number of iterations
-        - `fold_smoothing`: boolean: smooth only folds
         - `verbose`: boolean: print statistics about the surface
 
         See also: :meth:`smoothLowPass`, :meth:`smoothLaplaceHC`
         """
         cmd = 'gtssmooth'
-        if fold_smoothing:
-            cmd += ' -f %s' % fold_smoothing
+#        if fold_smoothing:
+#            cmd += ' -f %s' % fold_smoothing
         cmd += ' %s %s' % (lambda_value,iterations)
         if verbose:
             cmd += ' -v'
@@ -1768,12 +1808,10 @@ Total area: %s; Enclosed volume: %s
         if sta or verbose:
             pf.message(out)
         pf.message("Reading smoothed model from %s" % tmp1)
-        self.__init__(*read_gts(tmp1))        
+        S = TriSurface.read(tmp1)        
         os.remove(tmp1)
+        return S
 
-
-#### THIS FUNCTION RETURNS A NEW SURFACE
-#### WE MIGHT DO THIS IN FUTURE FOR ALL SURFACE PROCESSING
 
     def boolean(self,surf,op,intersection_curve=False,check=False,verbose=False):
         """Perform a boolean operation with another surface.
@@ -1822,11 +1860,6 @@ Total area: %s; Enclosed volume: %s
         S = TriSurface.read(tmp2)        
         os.remove(tmp2)
         return S
-
-
-    ## @deprecation("cutAtPlane has been renamed to cutWithPlane. Please use the new name.")
-    ## def cutAtPlane(self,*args,**kargs):
-    ##     return cutWithPlane(*args,**kargs)
 
 
 ##########################################################################
@@ -2000,7 +2033,7 @@ def remove_triangles(elems,remove):
 
     return elems
 
-
+#####################################################################
 ### Some simple surfaces ###
 
 def Rectangle(nx,ny):
@@ -2009,7 +2042,11 @@ def Rectangle(nx,ny):
     return TriSurface(F)
 
 def Cube():
-    """Create a surface in the form of a cube"""
+    """Create the surface of a cube
+
+    Returns a TriSurface representing the surface of a unit cube.
+    Each face of the cube is represented by two triangles.
+    """
     back = Formex(mpattern('12-34'))
     fb = back.reverse() + back.translate(2,1)
     faces = fb + fb.rollAxes(1) + fb.rollAxes(2)
