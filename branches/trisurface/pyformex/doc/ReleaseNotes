@@ -1,0 +1,126 @@
+.. $Id$    -*- rst -*-
+  
+..
+  This file is part of pyFormex 0.8.2 Release Sat Jun  5 10:49:53 2010
+  pyFormex is a tool for generating, manipulating and transforming 3D
+  geometrical models by sequences of mathematical operations.
+  Homepage: http://pyformex.org   (http://pyformex.berlios.de)
+  Copyright (C) Benedict Verhegghe (benedict.verhegghe@ugent.be)
+  Distributed under the GNU General Public License version 3 or later.
+  
+  
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see http://www.gnu.org/licenses/.
+  
+  
+
+
+pyFormex 0.8.3  Releasenotes
+============================
+
+This is a collection of the most prominent changes in pyFormex 0.8.3
+compared to the previous release 0.8.2
+
+All outstanding bugs have been fixed and there has been a lot of code
+restructuring.
+
+
+Documentation
+-------------
+- The reference manual now shows the correct arguments for most functions and
+methods.
+
+
+Installation
+------------
+
+
+Command line
+------------
+
+
+Configuration
+-------------
+
+
+Core
+----
+- Connectivity.connect(): class method comparable to Formex.connect()
+
+
+
+Gui
+---
+- NewInputDialog has become the default, askItems() will convert
+  automatically where possible.
+- warnings ar displayed by a popup by default
+
+
+Widgets
+-------
+- Added a 'point' InputItem to input 3 coordinates.
+- Added a 'button' InputItem setting a value from a function
+- Added an ImageView widget to display raster images
+
+
+Drawing
+-------
+- Bezier curves are drawn directly instead of by a polynomial approximation.
+
+
+Scripting
+---------
+- askItems will now try to translate its data to the new InputDialog,
+  which has become the default
+- The script viewport is now uncoupled from the current GUI viewport.
+
+
+Projects
+--------
+
+
+Mesh
+----
+- many new and improved functions
+
+
+Plugins
+-------
+- nurbs (NEW): a plugin to experiment with NURBS curves
+- flavia (NEW): a plugin for postprocessing FLAVIA result files
+- surface plugin was renamed trisurface
+- tools:
+  - convert pyFormex Geometry Files (.pgf) to latest format
+- postproc_menu: import FLAVIA result files 
+- fe_abq: more ABAQUS features have been implemented
+
+
+External
+--------
+- calix can be called and postprocessed, see FeEx example
+- gambit-neu scripts in pyformex/bin
+
+
+Examples
+--------
+New examples:
+- SplineSurface
+.. - RotoTranslation
+.. - SurfaceProjection
+.. - BezierSpline
+
+- FeEx: 
+  - direct run and postprocessing of calix jobs 
+  - 
+
+.. End
