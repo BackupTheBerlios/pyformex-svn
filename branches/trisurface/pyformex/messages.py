@@ -77,4 +77,6 @@ warn_trisurface_getfaces = "TriSurface.getFaces now returns the faces' node numb
 
 warn_mesh_select_default_compacted = "Mesh.select now by default compacts the Mesh. Use the `compact=False` argument if you do not want the compaction."
 
+warn_widgets_updatedialogitems = "gui.widgets.updateDialogItems now expects data in the new InputItem format. Use gui.widgets.updateOldDialogItems for use with old data format."
+
 # End
