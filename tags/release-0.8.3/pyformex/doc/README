@@ -1,0 +1,214 @@
+.. $Id$    -*- rst -*-
+  
+..
+  This file is part of pyFormex 0.8.3 Release Sun Dec  5 18:01:17 2010
+  pyFormex is a tool for generating, manipulating and transforming 3D
+  geometrical models by sequences of mathematical operations.
+  Homepage: http://pyformex.org   (http://pyformex.berlios.de)
+  Copyright (C) Benedict Verhegghe (benedict.verhegghe@ugent.be)
+  Distributed under the GNU General Public License version 3 or later.
+  
+  
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see http://www.gnu.org/licenses/.
+  
+  
+What is pyFormex?
+=================
+pyFormex is a tool for generating, manipulating and transforming large
+geometrical models of 3D structures by sequences of mathematical 
+transformations. Thanks to a powerful (Python based) scripting language,
+pyFormex is very well suited for the automated design of spatial frame
+structures. It provides a wide range of operations on surface meshes, 
+like STL type triangulated surfaces. There are provisions to import medical 
+scan images. pyFormex can also be used as a pre- and post-processor for 
+Finite Element analysis programs. Finally, it might be used just for 
+creating some nice graphics.
+
+Using pyFormex, the topology of the elements and the final geometrical form
+can be decoupled. Often, topology is created first and then mapped onto the
+geometry. Through the scripting language, the user can define any sequence
+of transformations, built from provided or user defined functions. 
+This way, building parametric models becomes a natural thing.
+
+While pyFormex is still under development (http://pyformex.berlios.de), 
+it already provides a fairly stable scripting language and an OpenGL GUI
+environment for displaying and manipulating the generated structures. 
+
+
+Installation
+============
+
+We detail here only the installation on Linux platforms.
+
+
+Prerequisites
+------------- 
+Essential:
+- python: http://www.python.org  (version 2.4 or higher; 2.5 recommended)
+- numpy: /http://numpy.scipy.org/ (version 1.0 or higher; 1.1 recommended)
+- Qt4: http://www.trolltech.com/products/qt
+- PyQt4: http://www.riverbankcomputing.co.uk/pyqt/index.php
+- PyOpenGL: http://pyopengl.sourceforge.net/
+
+To compile the acceleration library (highly recommended!), you will also
+need the appropriate header Python and OpenGL header files.
+
+Further, we recommend to install the following for extended functionality:
+- python-gnuplot
+- python-doc
+- python-scipy
+- units
+- imagemagick
+- admesh
+
+For the following extensions, which are not easily packaged format,
+an install script is provided in this distribution.
+- calpy
+- pygl2ps
+- gts
+- tetgen
+
+
+Easy way to install prerequisites on Debian GNU/Linux or Ubuntu
+---------------------------------------------------------------
+On Debian (lenny) systems (and Debian-derivatives like Ubuntu) you can install
+all basic prerequisites and their dependencies with the command:
+``apt-get install python-qt4-gl python-numpy``
+
+If you want to compile the acceleration library (which is highly recommended) you also need the header files:
+``apt-get install python-dev libgl1-mesa-dev``
+
+Install the extras:
+``apt-get install python-gnuplot python-doc python-scipy units imagemagick admesh``
+
+Howto install pyFormex:
+-----------------------
+If a previous version of pyFormex was already installed on your system,
+you may want to remove the older version first before installing the new one.
+See further (Howto uninstall pyFormex)
+
+We suppose you have installed all the prerequisites and downloaded the
+pyformex source tarball: pyformex-VERSION.tar.gz
+
+Unpack the pyFormex source tarball:
+``tar xvzf pyformex-VERSION.tar.gz``
+Go to the created pyformex directory:
+``cd pyformex-VERSION``
+Do (with root privileges)
+``python setup.py install --prefix=/usr/local``
+This will install pyFormex under /usr/local/. You can change the prefix
+to install in some other place.
+
+After installation you can remove the directory where you unpacked the tarball.
+
+The installation procedure installs everything into a single directory,
+and creates a symlink to the executable in /usr/local/bin.
+You can use the command pyformex --whereami to find out where pyFormex
+is installed.
+
+If you have xdg-utils on your system, the installation procedure will also
+install a menu and desktop starter for pyFormex.
+
+
+Howto uninstall pyFormex:
+-------------------------
+A pyFormex installation of version 0.5 or later can be removed with the command
+``pyformex --remove``
+and then answering 'yes' to the question.
+
+
+ 
+Howto install the external packages
+-----------------------------------
+pyFormex makes use of external software components to enhance its functionality.
+While they are not required for the core operation of pyFormex, many users may
+want to install them. Some of these extras (admesh, units) can easily be
+installed from your regular distribution repositories.
+Some extra components however either are not available in packaged format, or
+thew existing packages do not work together well with pyFormex.
+For these components, the pyFormex distribution contains an adhoc install
+procedure to help our users with the installation. The procedures are located
+in dedicated subdirectories of the pyformex-VERSION/pyformex/external directory
+of the unpacked release tree. Each subdirectory contains a PKG.install script.
+To install the corresponding package, execute the script from within the 
+subdirectory, with root privileges and with a single parameter 'all'.
+
+
+- gl2ps: Image output to in vector formats (PS, EPS, PDF and SVG). Requires
+  a Python interface, provided by our install procedure. 
+  Install from external/pygl2ps with:
+  ``(sudo) ./pygl2ps.install all``
+- gts: Operations on triangulated surfaces. The available standard packages do
+  not install all required files. Our install procedure will also fix some bugs.
+  Install from external/gts with:
+  ``(sudo) ./gts.install all``
+- tetgen: Create quality tetraeder meshes. 
+  Install from external/tetgen with:
+  ``(sudo) ./tetgen.install all``
+- calpy: Simple finite element simulation framework. Needed for the ?_calpy 
+  examples. Has to be installed from source, because is has to be compiled
+  against the same numpy version as pyFormex itself.
+  Install from external/calpy with:
+  ``(sudo) ./calpy.install all``
+
+
+Running pyFormex from Subversion (SVN) sources
+----------------------------------------------
+If the officially released pyFormex packages are not suitable for your needs,
+you can try installing pyFormex from the Subversion sources. Besides the basic 
+prerequisites (see above), you will also need to have 'Subversion' installed.
+
+The `SVN repository`_ on the developer site is accessible by anonymous SVN.
+The command ``svn checkout svn://svn.berlios.de/pyformex/trunk`` will checkout
+the source to a local directory ``trunk``. Provided you have all the 
+prerequisites installed, pyFormex can then be run directly from the checked out
+source: ``trunk/pyformex/pyformex``. 
+If you want to use the compiled accelerator library however, you will have to
+create it first: ``cd trunk/pyformex/lib; ./configure; make`` should do it.
+
+Once you have a checked-out source tree, you can easily sync it to the latest
+repository version by just issuing the command ``svn up`` from your checkout
+directory. 
+
+Documentation
+=============
+
+The manual is included with the pyFormex distribution. Execute the command
+pyformex --whereami to find out where the pyformex files are installed.
+When working with the pyFormex gui, you can load the manual in your browser
+through the help menu, or view the online manual at
+http://pyformex.berlios.de/manual    
+
+To use pyFormex, you create a script that builds a structure layout and 
+geometry. Look at the examples to get the feeling of how it is working. 
+Use the File->Play menu selection to display the structure. 
+
+The examples and the python source are relatively well documented.
+
+
+Help and Feedback
+=================
+
+For any questions or feedback, please go to the pyFormex website at
+http://pyformex.berlios.de
+
+If you find any bugs or malfunctions in pyFormex, please submit them to
+http://developer.berlios.de/bugs/?group_id=2717
+
+
+.. _`SVN repository`: http://developer.berlios.de/svn/?group_id=2717
+
+.. target-notes::
+
+.. End
