@@ -1,0 +1,60 @@
+#!/bin/bash
+# 
+script=$(basename $0)
+config=searchpy.conf
+
+syntax() {
+    cat <<EOF
+Usage: searchpy [-a] [OPTION]... SEARCH
+       changepy [-a] [OPTION]... SEARCH TARGET REPLACE
+
+searchpy searches for a string SEARCH in all Python files of pyFormex
+and possibly in other configured (Python or other) files. 
+It displays the matching file names and lines.
+
+changepy searches the same files for SEARCH, and in all matching lines 
+it replaces the string TARGET with REPLACE.
+
+Options:
+-a : Should be the first and a separate option: if specified, the directories
+     specified in the user configuration file (searchpy.conf) will also be
+     searched. The searchpy.conf file holds a line myfiles=... with same
+     format as files=... in this script.
+
+EOF
+}
+
+
+# These are the default pyformex paths that are searched
+
+files="pyformex/pyformex pyformex/pyformexrc pyformex/*.py pyformex/gui/*.py pyformex/plugins/*.py pyformex/lib/*.py  pyformex/examples/*.py pyformex/examples/*/*.py"
+
+
+if [ "$1" = "-a" ]; then
+    shift
+    [ -f "$config" ] && {
+	. $config
+	files="$files $myfiles"
+    }
+fi
+
+search=$1
+[ -n "$search" ] || { syntax; exit; }
+
+
+cd $(dirname $0)
+
+#echo $files
+
+case "$script" in
+    searchpy ) 
+	grep "$@" $files ;;
+    
+    changepy ) 
+	target=$2
+	replace=$3
+	[ -n "$target" ] && sed -i "/$search/s|$target|$replace|" $files
+	;;
+
+esac
+

@@ -1,0 +1,234 @@
+# This is the default pyFormex config file. DO NOT CHANGE IT!  -*- PYTHON -*-
+# $Id$
+##
+##  This file is part of pyFormex 0.8.4 Release Sat Jul  9 14:43:11 2011
+##  pyFormex is a tool for generating, manipulating and transforming 3D
+##  geometrical models by sequences of mathematical operations.
+##  Homepage: http://pyformex.org   (http://pyformex.berlios.de)
+##  Copyright (C) Benedict Verhegghe (benedict.verhegghe@ugent.be) 
+##  Distributed under the GNU General Public License version 3 or later.
+##
+##
+##  This program is free software: you can redistribute it and/or modify
+##  it under the terms of the GNU General Public License as published by
+##  the Free Software Foundation, either version 3 of the License, or
+##  (at your option) any later version.
+##
+##  This program is distributed in the hope that it will be useful,
+##  but WITHOUT ANY WARRANTY; without even the implied warranty of
+##  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##  GNU General Public License for more details.
+##
+##  You should have received a copy of the GNU General Public License
+##  along with this program.  If not, see http://www.gnu.org/licenses/.
+##
+#
+# Changes should go to /etc/pyformexrc (for site-wide changes)
+# or to ~/.pyformexrc (for personal settings).
+# If your are missing these files, you can safely copy (parts of) this file
+# as a start. 
+# Config settings are read in order from this file, then /etc/pyformexrc,
+# ~/.pyformex/pyformexrc. The last settings will override previous ones.
+#
+# The config is now read by the config.Config class
+# Two variables are already set on entry: pyformexdir, homedir
+#
+import os
+
+# files and directories
+workdir = "."
+icondir = os.path.join(pyformexdir,'icons')
+examplesdir = os.path.join(pyformexdir,'examples')
+datadir = os.path.join(pyformexdir,'data')
+bindir = os.path.join(pyformexdir,'bin')
+userconfdir = os.path.join(homedir,'.pyformex')
+siteprefs = '/etc/pyformexrc'
+localprefs = '.pyformexrc'
+scripttemplate = os.path.join(pyformexdir,'template.py')
+
+# scriptdirs is a list of (title,dir) tuples
+# for 'examples', the directory will be filled in automagically
+scriptdirs = [ ('Examples','') ]
+
+# extra paths to append tot sys.path
+syspath = []
+
+
+# commands
+### THESE MAY BE CHANGED BY THE INSTALLATION PROCEDURE
+editor = os.environ.get('VISUAL','')
+viewer = 'firefox'   # html viewer
+browser = 'firefox'  # web browser
+fortune = 'fortune -s' # command to generate a fortune cookie
+
+autoglobals = True
+uselib = True
+
+[warnings]
+nice = True
+popup=True
+# Warnings to be filtered out: a list of tuples (message,module,category)
+# module and category have defaults
+# Example: filterwarnings = [('warn_viewport_switching',)]
+# This should best be left empty and only filled by the user
+# Warnings from upstream packages can be filtered out here
+filters = [('.*return_index.*','numpy')]
+
+[gui]
+#imagesfromeps = True
+fortune = False  # show a fortune cookie on startup
+history = []
+history_max = 20
+
+splash = os.path.join(icondir,'pyformex-splash.png')
+plugins = ['geometry_menu']
+style = "Plastique"
+size=(800,600)
+bdsize=size
+pos=(0,0)
+fullscreen = False
+icontype = '.xpm'
+
+prefsmenu = True     # add settings menu menu
+viewportmenu = True  # add viewport menu
+cameramenu = True    # add camera menu
+modemenu = True      # add rendermode menu
+viewmenu = True      # add views menu
+examplesmenu = True  # add examples menu
+
+camerabar = 'top'     # add camera toolbar to top toolbar space
+modebar = 'top'       # add rendemode toolbar to top toolbar space
+viewbar = 'top'       # add views toolbar to top toolbar space
+
+normalsbutton = True  # add normals button to toolbar
+lightbutton = True    # add light button to toolbar
+shrinkbutton = False  # add shrink button to toolbar
+timeoutbutton = False # add timeout button to toolbar
+timeoutvalue = 2      # timeout after this number of seconds
+coordsbox = False     # add coords display widget to toolbar
+
+defviews = [('front','view-xr-yu'),('back','view-xl-yu'),\
+            ('right','view-zl-yu'),('left','view-zr-yu'),\
+            ('top','view-xr-zd'),('bottom','view-xr-zu'),\
+            ('iso','view-iso1'),\
+            ]
+zoomfactor = 1.15      # zooming factor for zoom buttons
+rotfactor = 5.         # rotation angle for rotation buttons
+panfactor = 0.05       # translation factor for pan buttons
+autozoomfactor = 1.732 # enlargement factor for the autozoom (sqrt(3))
+wheelzoomfactor = 0.25  # enlargement factor for the wheelzoom
+dynazoom = ['area','dolly']     # preferred zoom technique ('area', 'dolly', 'lens' or 'none')
+wheelzoom = 'area'    # action performed by the wheel ('area', 'dolly', 'lens')
+
+plot2d = 'gnuplot'
+easter_egg = ()
+
+layout = 1
+showfocus = True
+
+# Default canvas settings
+[canvas]
+bgcolor = 'lightgrey'       # canvas background color
+bgcolor2 = None             # if defined, canvas has a graded background
+fgcolor = 'black'           # default drawing color
+bkcolor = None              # if defined, backsides of planes have this color
+slcolor = 'yellow'          # highlighting color
+colormap = ['black','red','green','blue','cyan','magenta','yellow','white'] 
+bkcolormap = colormap
+transparency = 0.5          # default transparency value
+pointsize = 4.0             # size of points
+linewidth = 1.0             # width of lines
+linestipple = (0,1)         # line stipple (factor,pattern)
+marksize = 0.4              # size of 3D marks
+marktype = 'sphere'         # type of 3D mark
+
+
+[mark]
+avgnormalsize = '_auto_'
+
+
+[draw]
+wait = 0.0  # time(sec.) to wait between draw operations
+flywait = 0.3  # time(sec.) to wait between subsequent views in auto flying
+localaxes = True     # by default, buttons rotate/pan in local axes
+quadline = [] # 'line3' ]
+quadsurf = [] # [ 'quad8', 'quad9', 'hex20' ]
+
+[pick]
+size=(12,12) # size of the pick window
+
+
+[material]
+matte = dict(ambient=0.8,diffuse=0.8,specular=0.2)
+default = dict(ambient=0.3,diffuse=0.3,specular=0.6)
+plastic = dict(ambient=0.9,diffuse=0.9,specular=0.7)
+metal = dict(ambient=0.1,diffuse=0.1,specular=0.9)
+
+[light]
+light0 = {'enabled':True,'ambient':0.3,'diffuse':1.0,'specular':0.2,'position':(1.,1.,1.,0.)}
+light1 = {'enabled':True,'ambient':0.0,'diffuse':1.0,'specular':0.2,'position':(-1.,1.,1.,0.)}
+light2 = {'enabled':False,'ambient':0.0,'diffuse':1.0,'specular':0.2,'position':(0.,0.,1.,0.)}
+#light3 = {'enabled':False,'ambient':0.6,'diffuse':0.7,'specular':0.2,'position':(1.,-1.,1.,0.)}
+#light4 = {'enabled':False,'ambient':0.6,'diffuse':0.5,'specular':0.3,'position':(1.,1.,-1.,0.)}
+#light5 = {'enabled':False,'ambient':0.6,'diffuse':0.5,'specular':0.3,'position':(-1.,1.,-1.,0.)}
+#light6 = {'enabled':False,'ambient':0.6,'diffuse':0.5,'specular':0.3,'position':(-1.,-1.,-1.,0.)}
+#light7 = {'enabled':False,'ambient':0.6,'diffuse':0.5,'specular':0.3,'position':(1.,-1.,-1.,0.)}
+
+
+[render]
+mode = 'wireframe'
+lighting = None  # smooth modes will switch it on
+lightmodel = 'ambient and diffuse' # currently only model supported
+ambient = 0.2     # does this really do anything?
+material = 'default' # the name of a material defined above
+lights = ['light0','light1'] # a list of enabled lights
+avgnormaltreshold = 0.5
+line = '2' # '1' or '2'; if '1', quadratic lines are shown as linear
+surface = '1' # '1' or '2'; if '1', quadratic surfaces are shown as linear
+volume = True # if False, volumes are shown as their border surface
+
+
+[help]
+htmldir = os.path.join(pyformexdir,'doc','html')
+localdoc = os.path.join(htmldir,"index.html")
+refman = os.path.join(htmldir,"refman.html")
+tutorial = os.path.join(htmldir,"tutorial.html")
+index = os.path.join(htmldir,"genindex.html")
+modindex = os.path.join(htmldir,"py-modindex.html")
+readme = os.path.join(pyformexdir,"doc","README")
+style = os.path.join(pyformexdir,"doc","STYLE")
+builddoc = os.path.join(pyformexdir,"doc","build-local-docs.rst")
+todo = os.path.join(pyformexdir,"doc","TODO")
+notes = os.path.join(pyformexdir,"doc","ReleaseNotes")
+license = os.path.join(pyformexdir,"doc","COPYING")
+website = "http://pyformex.org"
+webdoc = website+"/doc"
+forums = "http://developer.berlios.de/forum/?group_id=2717"
+bugs = "http://developer.berlios.de/bugs/?group_id=2717"
+links = [('pyFormex','pyformex.org'),('pyFormex-dev','developer.berlios.de/projects/pyformex'),('Python','www.python.org'),('IBiTech-bioMMeda','www.biommeda.ugent.be'),('stent-boys@bioMMeda','www.stent-ibitech.ugent.be'),('FEops','www.feops.com'),]
+docs = [('&Local documentation',localdoc),('&Reference Manual',refman),('Tutorial',tutorial),('&Module Index',modindex),('&Index',index),('&Online documentation',webdoc),]
+docs2 = [('&Readme',readme),('&ReleaseNotes',notes),('&License',license),('New InputDialog',os.path.join(pyformexdir,"doc","InputDialog.rst")),]
+
+developer = [('pyFormex TODO list',todo),('&Build local documentation',builddoc),('pyFormex coding style',style),('Numpy documentation guidelines','http://projects.scipy.org/numpy/wiki/CodingStyleGuidelines'),('re-structured text (reST)','http://docutils.sourceforge.net/rst.html')]
+
+             
+[keys]
+save = 'F2'
+
+
+[surface]
+stlread = '.off'
+
+
+[mail]
+sender = ''
+server = 'localhost'
+
+[jobs]
+hosts = ['localhost']
+host = 'localhost'
+inputdir = '~'
+outputdir = '~'
+
+#End
+

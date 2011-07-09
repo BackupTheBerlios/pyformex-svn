@@ -1,0 +1,43 @@
+#!/bin/bash
+##
+##  This file is part of pyFormex 0.8.4 Release Sat Jul  9 14:43:11 2011
+##  pyFormex is a tool for generating, manipulating and transforming 3D
+##  geometrical models by sequences of mathematical operations.
+##  Homepage: http://pyformex.org   (http://pyformex.berlios.de)
+##  Copyright (C) Benedict Verhegghe (benedict.verhegghe@ugent.be) 
+##  Distributed under the GNU General Public License version 3 or later.
+##
+##
+##  This program is free software: you can redistribute it and/or modify
+##  it under the terms of the GNU General Public License as published by
+##  the Free Software Foundation, either version 3 of the License, or
+##  (at your option) any later version.
+##
+##  This program is distributed in the hope that it will be useful,
+##  but WITHOUT ANY WARRANTY; without even the implied warranty of
+##  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##  GNU General Public License for more details.
+##
+##  You should have received a copy of the GNU General Public License
+##  along with this program.  If not, see http://www.gnu.org/licenses/.
+##
+#
+# This is the pyformex post install script
+#
+
+instdir=$(pyformex --whereami | grep '^Script' | sed 's|.* ||')
+echo "Executables installed in $instdir"
+
+# install postabq here, because installing from setup.py creates a failure
+# if postabq was not compiled
+[ -d "$instdir" ] && install -m 0755 pyformex/lib/postabq $instdir
+
+# install the .desktop file on xdg compliant systems
+
+[ -n "$(type -P xdg-desktop-menu)" ] && {
+    xdg-icon-resource install --size 64 pyformex/icons/pyformex-64x64.png
+    xdg-desktop-icon install pyformex-pyformex.desktop
+    xdg-desktop-menu install pyformex-pyformex.desktop
+}
+
+echo "Post-install done"
