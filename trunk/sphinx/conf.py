@@ -146,11 +146,11 @@ html_theme = 'default'
 #html_title = None
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-html_short_title = 'pyFormex Documentation'
+html_short_title = 'Documentation'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = 'images/pyformex_logo_small.png' # 'images/scallop_dome_small.png'
+html_logo = 'images/pyformex_logo_filled.png' # 'images/scallop_dome_small.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
