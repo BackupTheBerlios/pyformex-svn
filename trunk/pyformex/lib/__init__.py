@@ -44,8 +44,6 @@ if options:
     accelerate = options.uselib is not False
     gui = options.gui
 
-print accelerate
-
 if accelerate:
 
     try:
@@ -87,7 +85,7 @@ if gui and drawgl is None:
     import drawgl
 
 
-print misc.accelerated, nurbs.accelerated, drawgl.accelerated
+debug("Accelerated: %s" % "; ".join([ "%s:%s" % (m.__name__,bool(m.accelerated)) for m in (misc,nurbs,drawgl)]))
 
 
 # End
