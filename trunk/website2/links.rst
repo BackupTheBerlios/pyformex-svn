@@ -1,0 +1,17 @@
+.. $Id$    -*- rst -*-
+
+.. include:: links.inc
+
+Links
+=====
+
+- The `stent research group`_ at IBiTech-bioMMeda hosts several developers and users of pyFormex.
+- `IBiTech-bioMMeda`_ is their parent research group.
+- `IBiTech, Ghent University`_ is the hosting institute.
+- The `BuMPer cluster`_ is their very own HPC solution and hosts a version of pyFormex for non-interactive use.
+- The `Vascular Modeling Toolkit`_ (vmtk) provides complimentary tools to pyFormex.
+- `FEops`_, a young company providing professional services with pyFormex, also offers training and support for pyFormex.  
+- `Numpy`_ is a framework for efficient numerical array operations in
+  Python. It is the most important component on which pyFormex was built.
+
+.. End

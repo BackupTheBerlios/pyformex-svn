@@ -44,6 +44,8 @@ if options:
     accelerate = options.uselib is not False
     gui = options.gui
 
+print accelerate
+
 if accelerate:
 
     try:
@@ -83,6 +85,9 @@ if nurbs is None:
 if gui and drawgl is None:
     debug("Using the (slower) Python draw functions")
     import drawgl
+
+
+print misc.accelerated, nurbs.accelerated, drawgl.accelerated
 
 
 # End
