@@ -1,7 +1,7 @@
-.. $Id: defines.inc 2064 2011-11-06 17:20:01Z bverheg $ -*- rst -*-
+.. $Id$ -*- rst -*-
   
 ..
-  This file is part of pyFormex 0.8.5     Sun Nov  6 17:27:05 CET 2011
+  This file is part of the pyFormex project.
   pyFormex is a tool for generating, manipulating and transforming 3D
   geometrical models by sequences of mathematical operations.
   Home page: http://pyformex.org
@@ -29,3 +29,5 @@
 
 .. |pyformex| replace:: pyFormex
 .. |year| replace:: 2011
+
+.. End
