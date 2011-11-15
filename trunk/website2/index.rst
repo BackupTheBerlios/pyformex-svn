@@ -60,6 +60,30 @@ displaying and manipulating the generated structures.
 .. include:: news.inc
 
 
+Overview
+========
+
+.. The following fixes problems with generating the PDF docs
+.. tabularcolumns:: |p{5cm}|p{5cm}|
+
++-------------------------------------+------------------------------------+
+|  `Gallery <gallery.html>`_          |  Documentation                     |
+|                                     |                                    |
+|  Everyone at times needs help with  |  :doc:`contents`                   |
+|  something. Our                     |                                    |
+|  `support page <support.html>`_     |                                    |
+|  presents different ways to         |                                    |
+|  get help with installing and/or    |                                    |
+|  using pyFormex.                    |                                    |
++-------------------------------------+------------------------------------+
+
+
+.. toctree::
+   :hidden:
+ 
+   contents
+
+
 `Gallery <gallery.html>`_
 =========================
 You are interested in pyFormex and want to know more about it? You
@@ -74,11 +98,6 @@ pyFormex in use.
 Our comprehensive `Documentation`_ collection is the ultimate source
 of information about pyFormex. Some of the popular documents are: 
 `Installing pyFormex`_, `pyFormex tutorial`_ and `pyFormex reference manual`_.
-
-.. toctree::
-   :hidden:
- 
-   http://pyformex.berlios.de/doc/index.html
 
 License 
 ======= 

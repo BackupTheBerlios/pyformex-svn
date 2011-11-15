@@ -46,7 +46,7 @@ what pyFormex can do for you.
 
    screenshots
    pyformexinuse
-   examples
+   applications
 
 
 .. _`pyFormex distribution`: ../install.html
