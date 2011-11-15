@@ -53,8 +53,11 @@ sys.path.insert(0,os.path.abspath('..'))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc','sphinx.ext.pngmath', 'sphinx.ext.autosummary',] #  'sphinx.ext.viewcode'] #'sphinx.ext.jsmath',
+extensions = ['sphinx.ext.autodoc','sphinx.ext.pngmath','sphinx.ext.autosummary','sphinx.ext.extlinks'] #  'sphinx.ext.viewcode'] #'sphinx.ext.jsmath',
 
+extlinks = {'mydoc': ('http:///www.nongnu.org/pyformex/doc/%s','doc '),
+            'mybug': ('http://savannah.nongnu.org/bugs/?%s','bug '),
+            }
 #render_class_autosummary = False
 
 # Add both class and __init__ docstrings

@@ -44,20 +44,23 @@ what pyFormex can do for you.
 .. toctree::
    :maxdepth: 1
 
-   screenshots
-   pyformexinuse
    applications
+   screenshots
+   videos
+   pdfs
 
-
-.. _`pyFormex distribution`: ../install.html
 
 Want other examples?
 --------------------
-Many more examples (with levels ranging from beginner to advanced) are
-included in the `pyFormex distribution`_. And as an extra bonus,
-here's a movie of a roof structure created by pyFormex. Click the
-reload
-button of your browser to see the movie play (again).
+The pyFormex distribution (see the `Install manual <doc/install.html>`_) 
+contains a wide collection of example scripts, 
+with levels ranging from beginner to
+advanced. Running these examples gives a nice overview of some
+functionalities of pyFormex. 
+
+As an extra bonus, here's a movie of a roof structure created by
+pyFormex. 
+Click the reload button of your browser to see the movie play (again).
 
 .. image:: images/roof-movie.gif
    :align: center

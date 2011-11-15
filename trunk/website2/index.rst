@@ -66,38 +66,57 @@ Overview
 .. The following fixes problems with generating the PDF docs
 .. tabularcolumns:: |p{5cm}|p{5cm}|
 
-+-------------------------------------+------------------------------------+
-|  `Gallery <gallery.html>`_          |  Documentation                     |
-|                                     |                                    |
-|  Everyone at times needs help with  |  :doc:`contents`                   |
-|  something. Our                     |                                    |
-|  `support page <support.html>`_     |                                    |
-|  presents different ways to         |                                    |
-|  get help with installing and/or    |                                    |
-|  using pyFormex.                    |                                    |
-+-------------------------------------+------------------------------------+
+.. rst-class:: fronttable
 
++--------------------------------------+--------------------------------------+
+| `Gallery <gallery.html>`_            | `Docsumentation <doc/index.html>`_   |
+| to wet your appetite                 | learn all about pyFormex             |
+|                                      |                                      |
+| :mydoc:`support page <support.html>` |                                      |
+| everyone at times needs help with    |  :doc:`contents`                     |
+| something                            |                                      |
++--------------------------------------+--------------------------------------+
+
+.. raw:: html
+
+  <table class="contentstable" align="center" style="margin-left: 30px"><tr>
+    <td width="50%">
+
+      <p class="biglink"><a class="biglink" href="gallery.html">Gallery</a><br/><span class="linkdescr">to wet your appetite</span></p>
+
+      <p class="biglink"><a class="biglink" href="contents.html">Contents</a><br/><span class="linkdescr">for a complete overview</span></p>
+
+    </td><td width="50%">
+
+      <p class="biglink"><a class="biglink" href="doc/index.html">Documentation</a><br/><span class="linkdescr">learn all about pyFormex</span></p>
+
+      <p class="biglink"><a class="biglink" href="support.html">Support</a><br/><span class="linkdescr">everyone at times needs help with something</span></p>
+
+    </td></tr>
+  </table>
+
+.. raw:: html
+
+  <table class="contentstable" align="center" style="margin-left: 30px"><tr>
+    <td width="50%">
+
+      <p class="biglink"><a class="biglink" href="gallery.html">Gallery</a><br/><span class="linkdescr">to wet your appetite</span></p>
+
+      <p class="biglink"><a class="biglink" href="contents.html">Contents</a><br/><span class="linkdescr">for a complete overview</span></p>
+
+    </td><td width="50%">
+
+      <p class="biglink"><a class="biglink" href="doc/index.html">Documentation</a><br/><span class="linkdescr">learn all about pyFormex</span></p>
+
+      <p class="biglink"><a class="biglink" href="support.html">Support</a><br/><span class="linkdescr">everyone at times neeeds help with something</span></p>
+
+    </td></tr>
+  </table>
 
 .. toctree::
    :hidden:
  
    contents
-
-
-`Gallery <gallery.html>`_
-=========================
-You are interested in pyFormex and want to know more about it? You
-wonder how pyFormex works or what it can do for you? 
-Well, to wet your appetite we have collected a
-`gallery <gallery.html>`_ with screenshots, posters, videos, examples, of
-pyFormex in use.
-
-
-`Documentation`_
-================
-Our comprehensive `Documentation`_ collection is the ultimate source
-of information about pyFormex. Some of the popular documents are: 
-`Installing pyFormex`_, `pyFormex tutorial`_ and `pyFormex reference manual`_.
 
 License 
 ======= 
@@ -105,17 +124,6 @@ This program is free software; you can redistribute it
 and/or modify it under the terms of the `GNU General Public License`_
 as published by the Free Software Foundation; either version 3 of the
 License, or (at your option) any later version.
-
-`Support <support.html>`_
-=========================
-Everyone at times needs help with something. Our `support page
-<support.html>`_ presents different ways to get help with installing and/or using pyFormex. 
-
-.. toctree::
-   :hidden:
-   :maxdepth: 1
- 
-   support
 
 `Project page`_
 ===============
