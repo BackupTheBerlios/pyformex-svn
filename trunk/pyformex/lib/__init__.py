@@ -85,7 +85,6 @@ if gui and drawgl is None:
     import drawgl
 
 
-debug("Accelerated: %s" % "; ".join([ "%s:%s" % (m.__name__,bool(m.accelerated)) for m in (misc,nurbs,drawgl)]))
-
+debug("Accelerated: %s" % accelerated)
 
 # End
